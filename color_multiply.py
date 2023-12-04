@@ -24,18 +24,14 @@ def calculate_epilepsy_risk(frame_values_gen):
     prev_frame_values = next(frame_values_gen)
     abs_sum_diffs = []
     # Iterate over the generator
-    print("Iterating generator...")
-    i = 0
     for frame_values in frame_values_gen:
         # Calculate the difference between consecutive frames
         frame_diffs = frame_values - prev_frame_values
         # Calculate the absolute sum of pixel differences for each frame difference
-        abs_sum_diffs.append(np.sum(np.abs(frame_diffs)))
+        abs_sum_diffs.append(np.mean(np.abs(frame_diffs)))
         # Update previous frame values
         prev_frame_values = frame_values
-        i += 1
 
-    print("Done iterating!", flush=True)
     # Convert list to numpy array
     abs_sum_diffs = np.array(abs_sum_diffs)
     # Calculate the mean of the absolute sum of differences
@@ -43,15 +39,14 @@ def calculate_epilepsy_risk(frame_values_gen):
     # Calculate the standard deviation of the absolute sum of differences
     std_abs_sum_diff = np.std(abs_sum_diffs)
     # Print the mean and standard deviation of the absolute sum of differences
-    # print(f"Mean absolute sum of differences between consecutive frames: {mean_abs_sum_diff}")
-    print(f"Standard deviation of absolute sum of differences between consecutive frames: {std_abs_sum_diff}")
+    print(f"Mean consecutive frames difference: {mean_abs_sum_diff}")
+    print(f"Standard deviation of consecutive frame differences: {std_abs_sum_diff}")
     # If the standard deviation is high, the video is more likely to cause epilepsy
-    return std_abs_sum_diff
+    return mean_abs_sum_diff, std_abs_sum_diff
 
 def frame_generator(clip, start, end):
     start_frame = int(start)
     end_frame = int(end)
-    print(start_frame, end_frame)
     for i, frame in enumerate(clip.iter_frames()):
         if i < start_frame:
             continue
@@ -59,7 +54,7 @@ def frame_generator(clip, start, end):
             break
         yield frame
 
-def plot_max_values(input_file):
+def plot_max_values(input_file, show_plot):
     """
     Plot max frame value for each half second throughout the video.
     """
@@ -101,9 +96,12 @@ def plot_max_values(input_file):
     plt.plot([x/4 for x in range(len(max_values_per_6_frames))], [np.max(val) for val in max_values_per_6_frames])
     plt.title('Max frame value per quarter second')
     plt.xlim(0, len(max_values_per_6_frames)/4)  # Set x-axis range to match the number of data points in seconds
+    if show_plot:
+        plt.show()
+        return []
     
     # Find all the time ranges where at least 15 consecutive frames have a max below 190
-    dimmed_ranges = []
+    dark_and_dimmed_ranges = []
     count = 0
     start_time = 0
     for i, value in enumerate(max_values):
@@ -113,19 +111,21 @@ def plot_max_values(input_file):
             count += 1
         else:
             if count >= 15:
-                dimmed_ranges.append((start_time, i / 24))  # Add the start and end time of the range
+                dark_and_dimmed_ranges.append((start_time, i / 24))  # Add the start and end time of the range
             count = 0
     if count >= 15:
-        dimmed_ranges.append((start_time, len(max_values) / 24))  # Add the last range if it ends at the end of the video
+        dark_and_dimmed_ranges.append((start_time, len(max_values) / 24))  # Add the last range if it ends at the end of the video
     
     # Print characteristics of the values in each range
-    for start, end in dimmed_ranges:
+    dimmed_ranges = []
+    for start, end in dark_and_dimmed_ranges:
         range_values = max_values[int(start*24):int(end*24)]  # Get the values in the range
-        print(f"Time range with at least 3 consecutive values below 180: {int(start/60)}:{start%60:.2f} - {int(end/60)}:{end%60:.2f} minutes")
-        print(f"Average value: {np.mean([np.max(val) for val in range_values])}")
-        print(f"Max value: {np.max([np.max(val) for val in range_values])}")
-        print(f"Min value: {np.min([np.min(val) for val in range_values])}")
-        print(f"Variance: {np.var([np.var(val) for val in range_values])}")
+        print(f"Time range with at least 15 consecutive values below 193: {int(start/60)}:{start%60:.2f} - {int(end/60)}:{end%60:.2f} minutes")
+        avg_value = np.mean([np.max(val) for val in range_values])
+        max_value = np.max([np.max(val) for val in range_values])
+        min_value = np.min([np.min(val) for val in range_values])
+        variance = np.var([np.var(val) for val in range_values])
+        print(f"Average value: {avg_value}, Max value: {max_value}, Min value: {min_value}, Variance: {variance}")
         if len(range_values) > 0:
             filtered_values = [x for x in range_values if isinstance(x, np.ndarray) and x.shape == (3,)]
             if len(filtered_values) > 0:
@@ -133,11 +133,13 @@ def plot_max_values(input_file):
         
         # Get the exact frame values in the range using a generator to avoid creating a large temporary list
         exact_frame_values = frame_generator(clip, start * 24, end * 24)
-        print("Done creating generator!")
-        risk = calculate_epilepsy_risk(exact_frame_values)
-        print(f"Epileptic risk: ", risk)
-        
-    plt.show()
+        risk_mean, risk_stddev = calculate_epilepsy_risk(exact_frame_values)
+        print(f"Epileptic risk: {risk_mean:.1f}, {risk_stddev:.1f}")
+        if risk_mean > 75 and risk_stddev > 7:
+            print("Likely dimmed scene! Undimming range...")
+            dimmed_ranges.append((start, end))
+    
+    return dimmed_ranges
 
 def main():
     parser = argparse.ArgumentParser(description='Multiply color values in a video by a factor.')
@@ -148,7 +150,7 @@ def main():
 
     args = parser.parse_args()
 
-    plot_max_values(args.input_file)
+    plot_max_values(args.input_file, args.only_plot)
     if (not args.only_plot):
         process_video(args.input_file, args.output_file, args.factor)
 
