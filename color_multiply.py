@@ -19,11 +19,25 @@ def process_video(input_file, output_file, factor):
     modified_clip = clip.fl_image(lambda frame: multiply_colors(frame, factor))
     modified_clip.write_videofile(output_file, codec='libx264', audio_codec='aac')
 
-def calculate_epilepsy_risk(frame_values):
-    # Calculate the difference between consecutive frames
-    frame_diffs = np.diff(frame_values, axis=0)
-    # Calculate the absolute sum of pixel differences for each frame difference
-    abs_sum_diffs = np.sum(np.abs(frame_diffs), axis=(1, 2, 3))
+def calculate_epilepsy_risk(frame_values_gen):
+    # Initialize variables
+    prev_frame_values = next(frame_values_gen)
+    abs_sum_diffs = []
+    # Iterate over the generator
+    print("Iterating generator...")
+    i = 0
+    for frame_values in frame_values_gen:
+        # Calculate the difference between consecutive frames
+        frame_diffs = frame_values - prev_frame_values
+        # Calculate the absolute sum of pixel differences for each frame difference
+        abs_sum_diffs.append(np.sum(np.abs(frame_diffs)))
+        # Update previous frame values
+        prev_frame_values = frame_values
+        i += 1
+
+    print("Done iterating!", flush=True)
+    # Convert list to numpy array
+    abs_sum_diffs = np.array(abs_sum_diffs)
     # Calculate the mean of the absolute sum of differences
     mean_abs_sum_diff = np.mean(abs_sum_diffs)
     # Calculate the standard deviation of the absolute sum of differences
@@ -33,6 +47,17 @@ def calculate_epilepsy_risk(frame_values):
     print(f"Standard deviation of absolute sum of differences between consecutive frames: {std_abs_sum_diff}")
     # If the standard deviation is high, the video is more likely to cause epilepsy
     return std_abs_sum_diff
+
+def frame_generator(clip, start, end):
+    start_frame = int(start)
+    end_frame = int(end)
+    print(start_frame, end_frame)
+    for i, frame in enumerate(clip.iter_frames()):
+        if i < start_frame:
+            continue
+        if i >= end_frame:
+            break
+        yield frame
 
 def plot_max_values(input_file):
     """
@@ -63,6 +88,8 @@ def plot_max_values(input_file):
             max_values.append(max_frame)
         with open(cache_file, 'wb') as f:
             pickle.dump(max_values, f)
+    
+    print("Loaded max values!")
     
     # Calculate max_values_per_6_frames from every 6 frames in max_values
     for i in range(0, len(max_values), 6):
@@ -104,8 +131,10 @@ def plot_max_values(input_file):
             if len(filtered_values) > 0:
                 print(f"Variance between channels: {np.var(filtered_values, axis=0)}")
         
-        range_values = [np.max(frame, axis=(0, 1)) for frame in clip.iter_frames()][int(start*24):int(end*24)]  # Get the values in the range
-        risk = calculate_epilepsy_risk(range_values)
+        # Get the exact frame values in the range using a generator to avoid creating a large temporary list
+        exact_frame_values = frame_generator(clip, start * 24, end * 24)
+        print("Done creating generator!")
+        risk = calculate_epilepsy_risk(exact_frame_values)
         print(f"Epileptic risk: ", risk)
         
     plt.show()
