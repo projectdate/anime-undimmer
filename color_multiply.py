@@ -134,10 +134,11 @@ def get_dimmed_scenes(input_file, show_plot):
         dark_and_dimmed_ranges.append((start_time, len(max_values)))  # Add the last range if it ends at the end of the video
     
     # Print characteristics of the values in each range
+    # Time range with at least 15 consecutive values below 193
     dimmed_ranges = []
     for start, end in dark_and_dimmed_ranges:
         range_values = max_values[int(start):int(end)]  # Get the values in the range
-        print(f"Time range with at least 15 consecutive values below 193: {int((start / 24)/60)}:{(start / 24)%60:.2f} - {int((end / 24)/60)}:{(end / 24)%60:.2f} minutes")
+        print(f"Possible dark or dimmed time range: {int((start / 24)/60)}:{(start / 24)%60:.2f} - {int((end / 24)/60)}:{(end / 24)%60:.2f} minutes")
         avg_value = np.mean([np.max(val) for val in range_values])
         max_value = np.max([np.max(val) for val in range_values])
         min_value = np.min([np.min(val) for val in range_values])
@@ -156,19 +157,21 @@ def get_dimmed_scenes(input_file, show_plot):
             print("Likely dimmed scene! Undimming range: ", (start, end, 256 / max_value))
             # TODO: Instead of putting 256, put the neighboring scene maxes
             dimmed_ranges.append((start, end, 256 / max_value))
-    
+        print("")
+        
     return dimmed_ranges
 
 def main():
     parser = argparse.ArgumentParser(description='Multiply color values in a video by a factor.')
     parser.add_argument('input_file', type=str, help='Path to the input video file')
     parser.add_argument('output_file', type=str, help='Path to the output video file')
-    parser.add_argument('factor', type=float, help='Factor to multiply color values by')
+    # parser.add_argument('factor', type=float, help='Factor to multiply color values by')
     parser.add_argument('--only_plot', action='store_true', help='Only plot max frame value for each quarter second')
 
     args = parser.parse_args()
 
     dimmed_scenes = get_dimmed_scenes(args.input_file, args.only_plot)
+    print("Dimmed scenes (start, stop, dim factor): ", dimmed_scenes)
     if (not args.only_plot):
         process_video(args.input_file, args.output_file, dimmed_scenes)
 
