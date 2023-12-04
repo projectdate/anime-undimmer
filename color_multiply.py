@@ -109,7 +109,7 @@ def get_dimmed_scenes(input_file, show_plot):
         max_frame = np.max(frames_to_average, axis=0)
         max_values_per_6_frames.append(max_frame)
         
-    print("Max every 6 frames", max_values_per_6_frames)
+    # print("Max every 6 frames", max_values_per_6_frames)
     plt.plot([x/4 for x in range(len(max_values_per_6_frames))], [np.max(val) for val in max_values_per_6_frames])
     plt.title('Max frame value per quarter second')
     plt.xlim(0, len(max_values_per_6_frames)/4)  # Set x-axis range to match the number of data points in seconds
