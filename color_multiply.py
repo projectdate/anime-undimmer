@@ -24,6 +24,18 @@ def process_video(input_file, output_file, dimmed_scenes):
     clip.write_videofile(output_file, codec='libx264', audio_codec='aac')
 
 def calculate_epilepsy_risk(frame_values_gen):
+    """
+    Calculate the risk of epilepsy for a video.
+
+    This function calculates the mean and standard deviation of the absolute sum of differences between consecutive frames.
+    A high mean and standard deviation indicates a high risk of epilepsy.
+
+    Parameters:
+    frame_values_gen (generator): A generator that yields the pixel values for each frame in the video.
+
+    Returns:
+    mean, stddev: A tuple containing the mean and standard deviation of the absolute sum of differences between consecutive frames.
+    """
     # Initialize variables
     prev_frame_values = next(frame_values_gen)
     abs_sum_diffs = []
@@ -43,8 +55,8 @@ def calculate_epilepsy_risk(frame_values_gen):
     # Calculate the standard deviation of the absolute sum of differences
     std_abs_sum_diff = np.std(abs_sum_diffs)
     # Print the mean and standard deviation of the absolute sum of differences
-    print(f"Mean consecutive frames difference: {mean_abs_sum_diff}")
-    print(f"Standard deviation of consecutive frame differences: {std_abs_sum_diff}")
+    # print(f"Mean consecutive frames difference: {mean_abs_sum_diff}")
+    # print(f"Standard deviation of consecutive frame differences: {std_abs_sum_diff}")
     # If the standard deviation is high, the video is more likely to cause epilepsy
     return mean_abs_sum_diff, std_abs_sum_diff
 
@@ -58,8 +70,13 @@ def frame_generator(clip, start, end):
             break
         yield frame
 
+def calculate_max_without_outliers(values):
+    q75, q25 = np.percentile(values, [75 ,25])
+    iqr = q75 - q25
+    threshold_values = [x for x in values if ((q25 - 1.5*iqr) <= np.max(x) <= (q75 + 1.5*iqr))]
+    return np.max([np.max(val) for val in threshold_values])
 
-def get_dimmed_scenes(input_file, show_plot):
+def get_dimmed_scenes(input_file, show_plot, threshold):
     """
     Plot max frame value for each half second throughout the video.
     This function takes in an input video file and a boolean value for whether to show the plot or not.
@@ -76,7 +93,6 @@ def get_dimmed_scenes(input_file, show_plot):
     list: A list of time ranges (start frame, end frame, factor) representing the dimmed scenes in the video and how much to undim them by, if show_plot is False. An empty list if show_plot is True.
     """
     clip = VideoFileClip(input_file)
-    # Store the max value of frame seen every quarter second
     print("Starting analysis...")
     max_values = []
     max_values_per_6_frames = []
@@ -109,20 +125,19 @@ def get_dimmed_scenes(input_file, show_plot):
         max_frame = np.max(frames_to_average, axis=0)
         max_values_per_6_frames.append(max_frame)
         
-    # print("Max every 6 frames", max_values_per_6_frames)
-    plt.plot([x/4 for x in range(len(max_values_per_6_frames))], [np.max(val) for val in max_values_per_6_frames])
-    plt.title('Max frame value per quarter second')
-    plt.xlim(0, len(max_values_per_6_frames)/4)  # Set x-axis range to match the number of data points in seconds
     if show_plot:
+        plt.plot([x/4 for x in range(len(max_values_per_6_frames))], [np.max(val) for val in max_values_per_6_frames])
+        plt.title('Max frame value per quarter second')
+        plt.xlim(0, len(max_values_per_6_frames)/4)  # Set x-axis range to match the number of data points in seconds
         plt.show()
         return []
     
-    # Find all the time ranges where at least 15 consecutive frames have a max below 190
+    # Find all the time ranges where at least 15 consecutive frames have a max below threshold
     dark_and_dimmed_ranges = []
     count = 0
     start_time = 0
     for i, value in enumerate(max_values):
-        if np.max(value) < 190:
+        if np.max(value) < threshold:
             if count == 0:
                 start_time = i  # Convert frame index to time in seconds
             count += 1
@@ -134,16 +149,16 @@ def get_dimmed_scenes(input_file, show_plot):
         dark_and_dimmed_ranges.append((start_time, len(max_values)))  # Add the last range if it ends at the end of the video
     
     # Print characteristics of the values in each range
-    # Time range with at least 15 consecutive values below 193
     dimmed_ranges = []
     for start, end in dark_and_dimmed_ranges:
         range_values = max_values[int(start):int(end)]  # Get the values in the range
         print(f"Possible dark or dimmed time range: {int((start / 24)/60)}:{(start / 24)%60:.2f} - {int((end / 24)/60)}:{(end / 24)%60:.2f} minutes")
         avg_value = np.mean([np.max(val) for val in range_values])
         max_value = np.max([np.max(val) for val in range_values])
+        max_value_no_outliers = calculate_max_without_outliers(range_values)
         min_value = np.min([np.min(val) for val in range_values])
         variance = np.var([np.var(val) for val in range_values])
-        print(f"Average value: {avg_value}, Max value: {max_value}, Min value: {min_value}, Variance: {variance}")
+        print(f"Average value: {avg_value}, Max value: {max_value}, Min value: {min_value}, 75th Percentile: {max_value_no_outliers}, Variance: {variance}")
         if len(range_values) > 0:
             filtered_values = [x for x in range_values if isinstance(x, np.ndarray) and x.shape == (3,)]
             if len(filtered_values) > 0:
@@ -154,12 +169,35 @@ def get_dimmed_scenes(input_file, show_plot):
         risk_mean, risk_stddev = calculate_epilepsy_risk(exact_frame_values)
         print(f"Epileptic risk: {risk_mean:.1f}, {risk_stddev:.1f}")
         if risk_mean > 75 and risk_stddev > 7:
-            print("Likely dimmed scene! Undimming range: ", (start, end, 256 / max_value))
+            print("Likely dimmed scene! Undimming range: ", (start, end, 256 / avg_value))
             # TODO: Instead of putting 256, put the neighboring scene maxes
-            dimmed_ranges.append((start, end, 256 / max_value))
+            dimmed_ranges.append((start, end, 256 / avg_value))
         print("")
         
     return dimmed_ranges
+
+def get_all_dimmed_scenes(input_file, show_plot):
+    """
+    Plot max frame value for each half second throughout the video.
+    This function takes in an input video file and a boolean value for whether to show the plot or not.
+    It calculates the maximum frame value for each half second throughout the video and plots it.
+    If show_plot is True, it will display the plot and return an empty list.
+    If show_plot is False, it will not display the plot and will return a list of time ranges where at least 15 consecutive frames have a max below 190.
+    The returned time ranges represent the dimmed scenes in the video.
+    
+    Parameters:
+    input_file (str): The path to the input video file.
+    show_plot (bool): Whether to display the plot or not.
+    
+    Returns:
+    list: A list of time ranges (start frame, end frame, factor) representing the dimmed scenes in the video and how much to undim them by, if show_plot is False. An empty list if show_plot is True.
+    """
+    thresholds = [150, 190, 230]
+    dimmed_scenes = []
+    thresholds.sort() # This is neccessary due to the way we apply most aggressive filters first
+    for threshold in thresholds:
+        dimmed_scenes.extend(get_dimmed_scenes(input_file, show_plot, threshold))
+    return dimmed_scenes
 
 def main():
     parser = argparse.ArgumentParser(description='Multiply color values in a video by a factor.')
@@ -170,9 +208,11 @@ def main():
 
     args = parser.parse_args()
 
-    dimmed_scenes = get_dimmed_scenes(args.input_file, args.only_plot)
-    print("Dimmed scenes (start, stop, dim factor): ", dimmed_scenes)
-    if (not args.only_plot):
+    if(args.only_plot):
+        get_dimmed_scenes(args.input_file, args.only_plot, 0)
+    else:
+        dimmed_scenes = get_all_dimmed_scenes(args.input_file, args.only_plot)
+        print("Dimmed scenes (start, stop, dim factor): ", dimmed_scenes)
         process_video(args.input_file, args.output_file, dimmed_scenes)
 
 if __name__ == "__main__":
