@@ -14,9 +14,9 @@ pip install -r requirements.txt
 python color_multiply.py ep15_original.mkv output_episode_undimmed.mkv --only_plot
 ```
 
-This will only display the ranges that are likely to be dark or dimmed (the dips in the graph), and plots the max brightness per frame. It will also cache those max values in a local .pkl to avoid expensive recalculation.
+This will only display the ranges that are likely to be dark or dimmed (the dips in the graph), and plots the max brightness per frame. It will also cache those max values in a local .pkl to avoid expensive recalculation for any more computation on an input video of the same filename.
 
-This will fully undim the calculated ranges that are determined to be dimmed and not just dark, and print the final ranges to console along with their values, and overwrite tmp.mkv with the undimmed ep15.mkv:
+This will fully undim the calculated ranges that are determined to be dimmed and not just dark, and print the final ranges to console along with their values, and overwrite output_episode_undimmed.mkv with the undimmed ep15:
 
 ```
 python color_multiply.py ep15_original.mkv output_episode_undimmed.mkv
