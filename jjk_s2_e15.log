@@ -1,0 +1,791 @@
+Final Undim Values for Episode 15 of JJK Season 2
+
+% python color_multiply.py ep15.mkv output_ep15.mkv
+
+Starting analysis...
+Cached!
+Loaded max values!
+Possible dark or dimmed time range: 0:13.21 - 0:16.00 minutes
+Average value: 35.298507462686565, Max value: 39, Min value: 35, 75th Percentile: 35, Variance: 0.0
+Variance between channels: [0.62731121 0.62731121 0.62731121]
+Epileptic risk: 8.5, 3.0
+
+Possible dark or dimmed time range: 0:36.04 - 0:38.04 minutes
+Average value: 117.4375, Max value: 120, Min value: 79, 75th Percentile: 120, Variance: 664.430362654321
+Variance between channels: [2.28776042 4.49609375 1.95659722]
+Epileptic risk: 45.2, 23.2
+
+Possible dark or dimmed time range: 2:48.58 - 2:51.08 minutes
+Average value: 127.33333333333333, Max value: 129, Min value: 97, 75th Percentile: 129, Variance: 275.0984224965705
+Variance between channels: [2.39555556 0.34333333 0.85555556]
+Epileptic risk: 55.2, 25.7
+
+Possible dark or dimmed time range: 4:10.00 - 4:11.58 minutes
+Average value: 94.0, Max value: 145, Min value: 18, 75th Percentile: 145, Variance: 361.37194350398426
+Variance between channels: [1639.36565097 1296.98060942 1499.46883657]
+Epileptic risk: 130.5, 72.3
+Likely dimmed scene! Undimming range:  (6000, 6038, 2.723404255319149)
+
+Possible dark or dimmed time range: 4:13.08 - 4:15.96 minutes
+Average value: 120.31884057971014, Max value: 131, Min value: 26, 75th Percentile: 125, Variance: 134081.52954691023
+Variance between channels: [792.44402436  93.36147868  29.08674648]
+Epileptic risk: 112.0, 43.6
+Likely dimmed scene! Undimming range:  (6074, 6143, 2.127680077089858)
+
+Possible dark or dimmed time range: 6:53.33 - 6:54.96 minutes
+Average value: 121.76923076923077, Max value: 132, Min value: 107, 75th Percentile: 132, Variance: 286.83117831835784
+Variance between channels: [13.2991453   3.22813938  9.92110454]
+Epileptic risk: 106.8, 21.7
+Likely dimmed scene! Undimming range:  (9920, 9959, 2.102337334175616)
+
+Possible dark or dimmed time range: 7:34.83 - 7:35.58 minutes
+Average value: 108.16666666666667, Max value: 133, Min value: 103, 75th Percentile: 111, Variance: 36.67748818777625
+Variance between channels: [24.0617284  39.13580247 45.25      ]
+Epileptic risk: 48.0, 44.0
+
+Possible dark or dimmed time range: 10:9.58 - 10:11.71 minutes
+Average value: 125.33333333333333, Max value: 140, Min value: 9, 75th Percentile: 136, Variance: 42.155106535473045
+Variance between channels: [731.93387159 756.29065744 664.00076894]
+Epileptic risk: 120.1, 22.0
+Likely dimmed scene! Undimming range:  (14630, 14681, 2.042553191489362)
+
+Possible dark or dimmed time range: 10:14.46 - 10:17.46 minutes
+Average value: 95.08333333333333, Max value: 102, Min value: 81, 75th Percentile: 102, Variance: 45.718792866941016
+Variance between channels: [8.24826389 4.85628858 6.21739969]
+Epileptic risk: 117.1, 11.0
+Likely dimmed scene! Undimming range:  (14747, 14819, 2.6923751095530237)
+
+Possible dark or dimmed time range: 12:36.25 - 12:36.92 minutes
+Average value: 104.875, Max value: 147, Min value: 75, 75th Percentile: 111, Variance: 106.5671296296296
+Variance between channels: [192.27734375 123.5        124.359375  ]
+Epileptic risk: 135.8, 36.1
+Likely dimmed scene! Undimming range:  (18150, 18166, 2.441001191895113)
+
+Possible dark or dimmed time range: 12:40.33 - 12:43.67 minutes
+Average value: 140.9625, Max value: 147, Min value: 122, 75th Percentile: 147, Variance: 239.74659722222228
+Variance between channels: [6.73609375 0.46109375 1.77359375]
+Epileptic risk: 94.3, 43.4
+Likely dimmed scene! Undimming range:  (18248, 18328, 1.8160858384322072)
+
+Possible dark or dimmed time range: 13:30.04 - 13:30.92 minutes
+Average value: 106.0952380952381, Max value: 134, Min value: 66, 75th Percentile: 134, Variance: 2274.904509952129
+Variance between channels: [355.17006803  81.70521542  52.27664399]
+Epileptic risk: 86.3, 43.9
+Likely dimmed scene! Undimming range:  (19441, 19462, 2.4129263913824057)
+
+Possible dark or dimmed time range: 14:59.75 - 15:2.75 minutes
+Average value: 134.91666666666666, Max value: 137, Min value: 110, 75th Percentile: 137, Variance: 172.25647767108674
+Variance between channels: [2.41358025 1.64737654 1.57638889]
+Epileptic risk: 83.8, 2.5
+
+Possible dark or dimmed time range: 15:42.67 - 15:45.17 minutes
+Average value: 139.01666666666668, Max value: 140, Min value: 117, 75th Percentile: 140, Variance: 30.587599451303102
+Variance between channels: [0.99888889 0.01638889 0.14972222]
+Epileptic risk: 20.0, 7.9
+
+Possible dark or dimmed time range: 15:50.17 - 15:51.17 minutes
+Average value: 89.29166666666667, Max value: 91, Min value: 74, 75th Percentile: 91, Variance: 318.4690500685872
+Variance between channels: [12.28993056  7.70659722  3.97222222]
+Epileptic risk: 25.5, 15.5
+
+Possible dark or dimmed time range: 15:55.17 - 15:57.67 minutes
+Average value: 110.08333333333333, Max value: 127, Min value: 79, 75th Percentile: 123, Variance: 5800.461508916324
+Variance between channels: [100.18222222 317.39555556  14.78083333]
+Epileptic risk: 19.6, 10.9
+
+Possible dark or dimmed time range: 18:25.29 - 18:28.79 minutes
+Average value: 121.60714285714286, Max value: 123, Min value: 101, 75th Percentile: 123, Variance: 15.957671957671948
+Variance between channels: [0.13081066 0.66709184 0.28174603]
+Epileptic risk: 16.1, 7.4
+
+Possible dark or dimmed time range: 18:37.54 - 18:40.50 minutes
+Average value: 1.0, Max value: 1, Min value: 0, 75th Percentile: 1, Variance: 3.0814879110195774e-33
+Variance between channels: [0. 0. 0.]
+Epileptic risk: 0.0, 0.0
+
+Possible dark or dimmed time range: 20:0.42 - 20:1.04 minutes
+Average value: 135.66666666666666, Max value: 146, Min value: 52, 75th Percentile: 146, Variance: 3991.0637037037036
+Variance between channels: [246.69333333 203.22666667 474.10666667]
+Epileptic risk: 67.8, 3.2
+
+Possible dark or dimmed time range: 21:33.54 - 21:40.04 minutes
+Average value: 136.05128205128204, Max value: 140, Min value: 110, 75th Percentile: 140, Variance: 238.1464679669808
+Variance between channels: [2.81245891 1.53201019 1.9460881 ]
+Epileptic risk: 69.8, 5.8
+
+Starting analysis...
+Cached!
+Loaded max values!
+Possible dark or dimmed time range: 0:13.21 - 0:16.00 minutes
+Average value: 35.298507462686565, Max value: 39, Min value: 35, 75th Percentile: 35, Variance: 0.0
+Variance between channels: [0.62731121 0.62731121 0.62731121]
+Epileptic risk: 8.5, 3.0
+
+Possible dark or dimmed time range: 0:36.04 - 0:38.04 minutes
+Average value: 117.4375, Max value: 120, Min value: 79, 75th Percentile: 120, Variance: 664.430362654321
+Variance between channels: [2.28776042 4.49609375 1.95659722]
+Epileptic risk: 45.2, 23.2
+
+Possible dark or dimmed time range: 2:48.58 - 2:51.08 minutes
+Average value: 127.33333333333333, Max value: 129, Min value: 97, 75th Percentile: 129, Variance: 275.0984224965705
+Variance between channels: [2.39555556 0.34333333 0.85555556]
+Epileptic risk: 55.2, 25.7
+
+Possible dark or dimmed time range: 4:9.75 - 4:11.96 minutes
+Average value: 110.84905660377359, Max value: 185, Min value: 18, 75th Percentile: 185, Variance: 566.5013251058108
+Variance between channels: [1948.58098968 1542.43716625 1819.78996084]
+Epileptic risk: 112.7, 70.4
+Likely dimmed scene! Undimming range:  (5994, 6047, 2.3094468085106383)
+
+Possible dark or dimmed time range: 4:13.08 - 4:15.96 minutes
+Average value: 120.31884057971014, Max value: 131, Min value: 26, 75th Percentile: 125, Variance: 134081.52954691023
+Variance between channels: [792.44402436  93.36147868  29.08674648]
+Epileptic risk: 112.0, 43.6
+Likely dimmed scene! Undimming range:  (6074, 6143, 2.127680077089858)
+
+Possible dark or dimmed time range: 6:4.75 - 6:12.29 minutes
+Average value: 168.86740331491714, Max value: 186, Min value: 105, 75th Percentile: 186, Variance: 2455.1036315763895
+Variance between channels: [148.43203809  26.84948567  97.20313788]
+Epileptic risk: 86.5, 38.4
+Likely dimmed scene! Undimming range:  (8754, 8935, 1.5159823327335187)
+
+Possible dark or dimmed time range: 6:12.33 - 6:14.58 minutes
+Average value: 179.25925925925927, Max value: 189, Min value: 151, 75th Percentile: 189, Variance: 1486.8754593642568
+Variance between channels: [29.90809328 11.99348422 74.01097394]
+Epileptic risk: 85.1, 36.8
+Likely dimmed scene! Undimming range:  (8936, 8990, 1.428099173553719)
+
+Possible dark or dimmed time range: 6:17.46 - 6:19.92 minutes
+Average value: 170.64406779661016, Max value: 185, Min value: 117, 75th Percentile: 185, Variance: 4847.385248314484
+Variance between channels: [219.83970124  11.39959782  64.14708417]
+Epileptic risk: 82.4, 44.7
+Likely dimmed scene! Undimming range:  (9059, 9118, 1.5001986491855384)
+
+Possible dark or dimmed time range: 6:36.46 - 6:41.58 minutes
+Average value: 163.39837398373984, Max value: 176, Min value: 35, 75th Percentile: 172, Variance: 12138.160958146767
+Variance between channels: [276.84605724 356.79674797 217.31760196]
+Epileptic risk: 103.3, 21.7
+Likely dimmed scene! Undimming range:  (9515, 9638, 1.566723057020599)
+
+Possible dark or dimmed time range: 6:53.33 - 6:55.00 minutes
+Average value: 123.425, Max value: 188, Min value: 107, 75th Percentile: 132, Variance: 287.2166666666667
+Variance between channels: [107.674375 127.       119.8475  ]
+Epileptic risk: 106.8, 21.4
+Likely dimmed scene! Undimming range:  (9920, 9960, 2.0741340895280533)
+
+Possible dark or dimmed time range: 7:6.83 - 7:7.46 minutes
+Average value: 182.66666666666666, Max value: 188, Min value: 165, 75th Percentile: 188, Variance: 249.90419753086417
+Variance between channels: [6.19555556 0.56       6.62222222]
+Epileptic risk: 108.5, 30.5
+Likely dimmed scene! Undimming range:  (10244, 10259, 1.4014598540145986)
+
+Possible dark or dimmed time range: 7:7.79 - 7:8.71 minutes
+Average value: 183.0, Max value: 188, Min value: 96, 75th Percentile: 188, Variance: 115340.83379247016
+Variance between channels: [239.12603306  26.39049587   7.72727273]
+Epileptic risk: 68.3, 26.1
+
+Possible dark or dimmed time range: 7:34.83 - 7:35.58 minutes
+Average value: 108.16666666666667, Max value: 133, Min value: 103, 75th Percentile: 111, Variance: 36.67748818777625
+Variance between channels: [24.0617284  39.13580247 45.25      ]
+Epileptic risk: 48.0, 44.0
+
+Possible dark or dimmed time range: 8:55.46 - 8:56.46 minutes
+Average value: 141.20833333333334, Max value: 157, Min value: 93, 75th Percentile: 137, Variance: 4480.359996570644
+Variance between channels: [129.90972222   3.69270833 153.55555556]
+Epileptic risk: 108.4, 83.6
+Likely dimmed scene! Undimming range:  (12851, 12875, 1.812924166420773)
+
+Possible dark or dimmed time range: 10:9.58 - 10:11.71 minutes
+Average value: 125.33333333333333, Max value: 140, Min value: 9, 75th Percentile: 136, Variance: 42.155106535473045
+Variance between channels: [731.93387159 756.29065744 664.00076894]
+Epileptic risk: 120.1, 22.0
+Likely dimmed scene! Undimming range:  (14630, 14681, 2.042553191489362)
+
+Possible dark or dimmed time range: 10:14.46 - 10:17.46 minutes
+Average value: 95.08333333333333, Max value: 102, Min value: 81, 75th Percentile: 102, Variance: 45.718792866941016
+Variance between channels: [8.24826389 4.85628858 6.21739969]
+Epileptic risk: 117.1, 11.0
+Likely dimmed scene! Undimming range:  (14747, 14819, 2.6923751095530237)
+
+Possible dark or dimmed time range: 12:36.17 - 12:37.92 minutes
+Average value: 139.1904761904762, Max value: 189, Min value: 75, 75th Percentile: 189, Variance: 4663.407547381093
+Variance between channels: [851.04535147 795.65759637 966.75283447]
+Epileptic risk: 116.1, 32.9
+Likely dimmed scene! Undimming range:  (18148, 18190, 1.8392062949024972)
+
+Possible dark or dimmed time range: 12:37.96 - 12:38.62 minutes
+Average value: 184.875, Max value: 189, Min value: 161, 75th Percentile: 189, Variance: 1083.9828317901233
+Variance between channels: [ 7.984375    1.25       37.80859375]
+Epileptic risk: 111.1, 18.1
+Likely dimmed scene! Undimming range:  (18191, 18207, 1.3847194050033806)
+
+Possible dark or dimmed time range: 12:38.67 - 12:39.58 minutes
+Average value: 183.95454545454547, Max value: 188, Min value: 151, 75th Percentile: 188, Variance: 3331.5714722987464
+Variance between channels: [ 3.94421488  8.0268595  61.42975207]
+Epileptic risk: 95.9, 34.1
+Likely dimmed scene! Undimming range:  (18208, 18230, 1.3916481344205582)
+
+Possible dark or dimmed time range: 12:40.29 - 12:43.67 minutes
+Average value: 141.09876543209876, Max value: 152, Min value: 122, 75th Percentile: 152, Variance: 246.36715646703965
+Variance between channels: [8.13839354 3.21262003 5.41685719]
+Epileptic risk: 95.2, 43.7
+Likely dimmed scene! Undimming range:  (18247, 18328, 1.8143319625514045)
+
+Possible dark or dimmed time range: 13:19.79 - 13:24.29 minutes
+Average value: 177.09259259259258, Max value: 186, Min value: 152, 75th Percentile: 186, Variance: 129.1959008619959
+Variance between channels: [116.83427641  65.56550069  90.47213649]
+Epileptic risk: 21.0, 14.2
+
+Possible dark or dimmed time range: 13:28.75 - 13:29.79 minutes
+Average value: 159.84, Max value: 189, Min value: 116, 75th Percentile: 189, Variance: 845.2577975308641
+Variance between channels: [226.16   422.2944 609.8176]
+Epileptic risk: 107.0, 5.4
+
+Possible dark or dimmed time range: 13:29.92 - 13:31.04 minutes
+Average value: 117.29629629629629, Max value: 174, Min value: 66, 75th Percentile: 174, Variance: 5333.346068519365
+Variance between channels: [1124.24142661  519.39368999  505.20987654]
+Epileptic risk: 98.7, 55.7
+Likely dimmed scene! Undimming range:  (19438, 19465, 2.1825071045153144)
+
+Possible dark or dimmed time range: 13:34.04 - 13:35.54 minutes
+Average value: 186.11111111111111, Max value: 187, Min value: 164, 75th Percentile: 187, Variance: 193.3794772138394
+Variance between channels: [4.36728395 0.15432099 3.13811728]
+Epileptic risk: 21.4, 14.8
+
+Possible dark or dimmed time range: 13:37.54 - 13:40.29 minutes
+Average value: 185.6060606060606, Max value: 188, Min value: 161, 75th Percentile: 188, Variance: 638.3289686993392
+Variance between channels: [71.29958678  2.63269054 46.271809  ]
+Epileptic risk: 23.0, 18.2
+
+Possible dark or dimmed time range: 13:46.62 - 13:47.62 minutes
+Average value: 183.5, Max value: 185, Min value: 146, 75th Percentile: 185, Variance: 3668.2893518518517
+Variance between channels: [32.25        1.5         5.16493056]
+Epileptic risk: 37.3, 32.0
+
+Possible dark or dimmed time range: 14:42.12 - 14:42.96 minutes
+Average value: 148.7, Max value: 181, Min value: 54, 75th Percentile: 181, Variance: 52487.66716049383
+Variance between channels: [127.91    92.3875 110.25  ]
+Epileptic risk: 111.1, 31.7
+Likely dimmed scene! Undimming range:  (21171, 21191, 1.7215870880968394)
+
+Possible dark or dimmed time range: 14:43.21 - 14:43.83 minutes
+Average value: 156.8, Max value: 183, Min value: 101, 75th Percentile: 183, Variance: 32752.28839506173
+Variance between channels: [275.92888889 364.29333333 416.48888889]
+Epileptic risk: 137.1, 48.3
+Likely dimmed scene! Undimming range:  (21197, 21212, 1.6326530612244896)
+
+Possible dark or dimmed time range: 14:59.75 - 15:2.75 minutes
+Average value: 134.91666666666666, Max value: 137, Min value: 110, 75th Percentile: 137, Variance: 172.25647767108674
+Variance between channels: [2.41358025 1.64737654 1.57638889]
+Epileptic risk: 83.8, 2.5
+
+Possible dark or dimmed time range: 15:42.67 - 15:45.17 minutes
+Average value: 139.01666666666668, Max value: 140, Min value: 117, 75th Percentile: 140, Variance: 30.587599451303102
+Variance between channels: [0.99888889 0.01638889 0.14972222]
+Epileptic risk: 20.0, 7.9
+
+Possible dark or dimmed time range: 15:50.17 - 15:51.17 minutes
+Average value: 89.29166666666667, Max value: 91, Min value: 74, 75th Percentile: 91, Variance: 318.4690500685872
+Variance between channels: [12.28993056  7.70659722  3.97222222]
+Epileptic risk: 25.5, 15.5
+
+Possible dark or dimmed time range: 15:55.17 - 15:57.67 minutes
+Average value: 110.08333333333333, Max value: 127, Min value: 79, 75th Percentile: 123, Variance: 5800.461508916324
+Variance between channels: [100.18222222 317.39555556  14.78083333]
+Epileptic risk: 19.6, 10.9
+
+Possible dark or dimmed time range: 16:42.17 - 16:44.58 minutes
+Average value: 147.22413793103448, Max value: 188, Min value: 75, 75th Percentile: 188, Variance: 13.578734898195856
+Variance between channels: [1042.2568371  1029.7030321  1081.28656361]
+Epileptic risk: 92.0, 31.1
+Likely dimmed scene! Undimming range:  (24052, 24110, 1.7388452980442675)
+
+Possible dark or dimmed time range: 16:46.17 - 16:50.12 minutes
+Average value: 183.25263157894736, Max value: 189, Min value: 148, 75th Percentile: 189, Variance: 4831.209471632297
+Variance between channels: [94.48199446 27.76354571  1.33916898]
+Epileptic risk: 39.8, 23.8
+
+Possible dark or dimmed time range: 16:55.17 - 16:55.79 minutes
+Average value: 182.8, Max value: 188, Min value: 158, 75th Percentile: 188, Variance: 31.877969821673513
+Variance between channels: [19.49333333 16.99555556 20.06222222]
+Epileptic risk: 61.8, 5.0
+
+Possible dark or dimmed time range: 17:12.67 - 17:13.79 minutes
+Average value: 185.4814814814815, Max value: 186, Min value: 164, 75th Percentile: 186, Variance: 2.0194839173657902e-28
+Variance between channels: [0.24965706 0.24965706 0.24965706]
+Epileptic risk: 51.6, 7.0
+
+Possible dark or dimmed time range: 17:14.21 - 17:16.17 minutes
+Average value: 184.89361702127658, Max value: 186, Min value: 162, 75th Percentile: 186, Variance: 38.32617406904411
+Variance between channels: [0.52059756 0.28519692 0.99683115]
+Epileptic risk: 44.4, 11.1
+
+Possible dark or dimmed time range: 18:25.29 - 18:34.54 minutes
+Average value: 156.72522522522522, Max value: 181, Min value: 101, 75th Percentile: 181, Variance: 1089.4420386352317
+Variance between channels: [1211.25381463  602.22319617  903.53753754]
+Epileptic risk: 14.8, 10.6
+
+Possible dark or dimmed time range: 18:37.54 - 18:40.50 minutes
+Average value: 1.0, Max value: 1, Min value: 0, 75th Percentile: 1, Variance: 3.0814879110195774e-33
+Variance between channels: [0. 0. 0.]
+Epileptic risk: 0.0, 0.0
+
+Possible dark or dimmed time range: 19:2.00 - 19:2.71 minutes
+Average value: 184.64705882352942, Max value: 189, Min value: 175, 75th Percentile: 189, Variance: 109.45089495493184
+Variance between channels: [8.41522491 5.26643599 0.35294118]
+Epileptic risk: 55.3, 11.4
+
+Possible dark or dimmed time range: 19:11.25 - 19:12.50 minutes
+Average value: 175.4, Max value: 185, Min value: 134, 75th Percentile: 185, Variance: 3356.0301234567905
+Variance between channels: [531.93888889  17.26222222   6.52888889]
+Epileptic risk: 32.6, 23.1
+
+Possible dark or dimmed time range: 19:14.79 - 19:17.62 minutes
+Average value: 181.08823529411765, Max value: 185, Min value: 157, 75th Percentile: 185, Variance: 683.7425349224657
+Variance between channels: [25.28027682 21.30103806  2.87456747]
+Epileptic risk: 42.4, 22.2
+
+Possible dark or dimmed time range: 20:0.42 - 20:1.04 minutes
+Average value: 135.66666666666666, Max value: 146, Min value: 52, 75th Percentile: 146, Variance: 3991.0637037037036
+Variance between channels: [246.69333333 203.22666667 474.10666667]
+Epileptic risk: 67.8, 3.2
+
+Possible dark or dimmed time range: 21:15.67 - 21:18.92 minutes
+Average value: 171.17948717948718, Max value: 172, Min value: 154, 75th Percentile: 172, Variance: 2.8083538282968505
+Variance between channels: [0.16305062 0.14727153 0.58908613]
+Epileptic risk: 36.3, 6.6
+
+Possible dark or dimmed time range: 21:33.54 - 21:40.04 minutes
+Average value: 136.05128205128204, Max value: 140, Min value: 110, 75th Percentile: 140, Variance: 238.1464679669808
+Variance between channels: [2.81245891 1.53201019 1.9460881 ]
+Epileptic risk: 69.8, 5.8
+
+Possible dark or dimmed time range: 23:37.62 - 23:38.58 minutes
+Average value: 100.26086956521739, Max value: 181, Min value: 0, 75th Percentile: 181, Variance: 9711.245536651963
+Variance between channels: [3122.71455577 3334.4536862  4001.81096408]
+Epileptic risk: 109.2, 82.9
+Likely dimmed scene! Undimming range:  (34023, 34046, 2.5533391153512577)
+
+Starting analysis...
+Cached!
+Loaded max values!
+Possible dark or dimmed time range: 0:13.21 - 0:16.00 minutes
+Average value: 35.298507462686565, Max value: 39, Min value: 35, 75th Percentile: 35, Variance: 0.0
+Variance between channels: [0.62731121 0.62731121 0.62731121]
+Epileptic risk: 8.5, 3.0
+
+Possible dark or dimmed time range: 0:36.04 - 0:38.04 minutes
+Average value: 117.4375, Max value: 120, Min value: 79, 75th Percentile: 120, Variance: 664.430362654321
+Variance between channels: [2.28776042 4.49609375 1.95659722]
+Epileptic risk: 45.2, 23.2
+
+Possible dark or dimmed time range: 2:48.58 - 2:51.08 minutes
+Average value: 127.33333333333333, Max value: 129, Min value: 97, 75th Percentile: 129, Variance: 275.0984224965705
+Variance between channels: [2.39555556 0.34333333 0.85555556]
+Epileptic risk: 55.2, 25.7
+
+Possible dark or dimmed time range: 3:36.50 - 3:37.79 minutes
+Average value: 209.2258064516129, Max value: 214, Min value: 93, 75th Percentile: 214, Variance: 7762.209015814298
+Variance between channels: [0.95941727 0.25598335 3.72320499]
+Epileptic risk: 56.3, 5.1
+
+Possible dark or dimmed time range: 4:5.25 - 4:15.96 minutes
+Average value: 157.59143968871595, Max value: 218, Min value: 18, 75th Percentile: 218, Variance: 41298.92383002594
+Variance between channels: [2118.23343275 1814.02146891 2084.39155778]
+Epileptic risk: 111.4, 41.5
+Likely dimmed scene! Undimming range:  (5886, 6143, 1.624453717192168)
+
+Possible dark or dimmed time range: 4:45.29 - 4:46.12 minutes
+Average value: 196.5, Max value: 223, Min value: 72, 75th Percentile: 223, Variance: 903493.511111111
+Variance between channels: [280.25   649.8475 909.9   ]
+Epileptic risk: 122.9, 28.4
+Likely dimmed scene! Undimming range:  (6847, 6867, 1.3027989821882953)
+
+Possible dark or dimmed time range: 6:4.75 - 6:19.92 minutes
+Average value: 176.6043956043956, Max value: 221, Min value: 105, 75th Percentile: 202, Variance: 3852.8765815991096
+Variance between channels: [229.36205621  99.1000483  253.40592924]
+Epileptic risk: 86.8, 39.6
+Likely dimmed scene! Undimming range:  (8754, 9118, 1.4495675440233964)
+
+Possible dark or dimmed time range: 6:36.46 - 6:45.33 minutes
+Average value: 178.44131455399062, Max value: 216, Min value: 35, 75th Percentile: 216, Variance: 7888.285971086477
+Variance between channels: [541.83640812 486.93874672 439.06566158]
+Epileptic risk: 104.1, 26.6
+Likely dimmed scene! Undimming range:  (9515, 9728, 1.434645337823616)
+
+Possible dark or dimmed time range: 6:51.58 - 6:56.83 minutes
+Average value: 176.3095238095238, Max value: 216, Min value: 107, 75th Percentile: 216, Variance: 3286.2501671907908
+Variance between channels: [ 863.46989166 1085.08900227 1400.36507937]
+Epileptic risk: 118.5, 18.1
+Likely dimmed scene! Undimming range:  (9878, 10004, 1.4519918973666444)
+
+Possible dark or dimmed time range: 7:6.83 - 7:9.58 minutes
+Average value: 187.1818181818182, Max value: 203, Min value: 96, 75th Percentile: 203, Variance: 171320.08089877447
+Variance between channels: [654.23875115  97.37304867  38.4214876 ]
+Epileptic risk: 85.3, 33.9
+Likely dimmed scene! Undimming range:  (10244, 10310, 1.3676542010684798)
+
+Possible dark or dimmed time range: 7:12.21 - 7:17.21 minutes
+Average value: 205.71666666666667, Max value: 228, Min value: 76, 75th Percentile: 228, Variance: 701083.5536899862
+Variance between channels: [1788.91416667  351.53638889   22.41972222]
+Epileptic risk: 46.5, 12.4
+
+Possible dark or dimmed time range: 7:34.08 - 7:35.62 minutes
+Average value: 160.8918918918919, Max value: 223, Min value: 103, 75th Percentile: 223, Variance: 2451.661102543985
+Variance between channels: [2516.2366691  2000.01168736 2680.02921841]
+Epileptic risk: 69.4, 45.0
+
+Possible dark or dimmed time range: 7:51.04 - 7:52.08 minutes
+Average value: 225.08, Max value: 229, Min value: 205, 75th Percentile: 229, Variance: 373.0484148148147
+Variance between channels: [4.4736 3.3984 7.0464]
+Epileptic risk: 90.6, 12.4
+Likely dimmed scene! Undimming range:  (11305, 11330, 1.137373378354363)
+
+Possible dark or dimmed time range: 8:3.08 - 8:7.50 minutes
+Average value: 195.83018867924528, Max value: 228, Min value: 0, 75th Percentile: 217, Variance: 818.0686989350806
+Variance between channels: [2336.55571378 2360.39302243 2523.90183339]
+Epileptic risk: 78.2, 39.0
+Likely dimmed scene! Undimming range:  (11594, 11700, 1.3072550342036806)
+
+Possible dark or dimmed time range: 8:16.17 - 8:16.79 minutes
+Average value: 197.6, Max value: 229, Min value: 104, 75th Percentile: 229, Variance: 858.6592043895747
+Variance between channels: [1770.53333333 1423.2        1907.66222222]
+Epileptic risk: 111.8, 36.2
+Likely dimmed scene! Undimming range:  (11908, 11923, 1.2955465587044535)
+
+Possible dark or dimmed time range: 8:55.42 - 8:56.46 minutes
+Average value: 143.28, Max value: 193, Min value: 93, 75th Percentile: 137, Variance: 4958.917530864198
+Variance between channels: [230.2176  78.3104 198.1056]
+Epileptic risk: 112.3, 84.0
+Likely dimmed scene! Undimming range:  (12850, 12875, 1.7867113344500278)
+
+Possible dark or dimmed time range: 9:53.04 - 9:55.21 minutes
+Average value: 216.1153846153846, Max value: 225, Min value: 147, 75th Percentile: 225, Variance: 2930.9560048213893
+Variance between channels: [ 82.87980769  86.44193787 143.41715976]
+Epileptic risk: 74.9, 32.2
+
+Possible dark or dimmed time range: 10:7.46 - 10:11.71 minutes
+Average value: 171.6764705882353, Max value: 226, Min value: 9, 75th Percentile: 226, Variance: 17823.135982836615
+Variance between channels: [2525.99163783 1455.13687043 2371.50336409]
+Epileptic risk: 119.9, 18.5
+Likely dimmed scene! Undimming range:  (14579, 14681, 1.4911769744731882)
+
+Possible dark or dimmed time range: 10:14.46 - 10:17.46 minutes
+Average value: 95.08333333333333, Max value: 102, Min value: 81, 75th Percentile: 102, Variance: 45.718792866941016
+Variance between channels: [8.24826389 4.85628858 6.21739969]
+Epileptic risk: 117.1, 11.0
+Likely dimmed scene! Undimming range:  (14747, 14819, 2.6923751095530237)
+
+Possible dark or dimmed time range: 10:30.17 - 10:34.17 minutes
+Average value: 217.65625, Max value: 222, Min value: 180, 75th Percentile: 222, Variance: 2185.962962962963
+Variance between channels: [27.79416233  2.5641276   3.12141927]
+Epileptic risk: 18.0, 11.7
+
+Possible dark or dimmed time range: 10:34.58 - 10:35.21 minutes
+Average value: 226.8, Max value: 228, Min value: 215, 75th Percentile: 228, Variance: 48.3674074074074
+Variance between channels: [3.71555556 0.22222222 1.36      ]
+Epileptic risk: 68.6, 4.7
+
+Possible dark or dimmed time range: 11:1.92 - 11:5.00 minutes
+Average value: 222.97297297297297, Max value: 229, Min value: 196, 75th Percentile: 229, Variance: 354.83126369612853
+Variance between channels: [9.94594595 6.51223521 2.64791819]
+Epileptic risk: 58.3, 15.0
+
+Possible dark or dimmed time range: 11:45.42 - 11:46.75 minutes
+Average value: 226.625, Max value: 228, Min value: 187, 75th Percentile: 228, Variance: 133.0864197530867
+Variance between channels: [0.       0.       0.859375]
+Epileptic risk: 29.2, 15.6
+
+Possible dark or dimmed time range: 11:46.88 - 11:48.54 minutes
+Average value: 228.25, Max value: 229, Min value: 187, 75th Percentile: 229, Variance: 127.66555555555547
+Variance between channels: [0.     0.     0.7875]
+Epileptic risk: 32.4, 17.1
+
+Possible dark or dimmed time range: 11:49.42 - 11:50.33 minutes
+Average value: 220.9090909090909, Max value: 223, Min value: 204, 75th Percentile: 223, Variance: 146.35455565758596
+Variance between channels: [13.92561983 24.40702479  3.3553719 ]
+Epileptic risk: 85.7, 11.6
+Likely dimmed scene! Undimming range:  (17026, 17048, 1.1588477366255143)
+
+Possible dark or dimmed time range: 11:59.92 - 12:1.83 minutes
+Average value: 211.32608695652175, Max value: 228, Min value: 176, 75th Percentile: 228, Variance: 804.4830217741369
+Variance between channels: [39.80151229 73.60680529 78.26323251]
+Epileptic risk: 72.0, 2.9
+
+Possible dark or dimmed time range: 12:4.92 - 12:13.92 minutes
+Average value: 218.33796296296296, Max value: 223, Min value: 161, 75th Percentile: 223, Variance: 3808.796210562414
+Variance between channels: [28.92436128 15.60793896  7.59411437]
+Epileptic risk: 46.9, 24.1
+
+Possible dark or dimmed time range: 12:31.67 - 12:34.67 minutes
+Average value: 218.86111111111111, Max value: 229, Min value: 175, 75th Percentile: 229, Variance: 2569.230900396282
+Variance between channels: [ 50.47665895  35.63406636 123.20814043]
+Epileptic risk: 102.8, 37.5
+Likely dimmed scene! Undimming range:  (18040, 18112, 1.1696915852265515)
+
+Possible dark or dimmed time range: 12:34.71 - 12:35.92 minutes
+Average value: 207.55172413793105, Max value: 228, Min value: 155, 75th Percentile: 228, Variance: 20893.156471572634
+Variance between channels: [287.4530321   79.97384067 103.35552913]
+Epileptic risk: 75.7, 24.6
+Likely dimmed scene! Undimming range:  (18113, 18142, 1.233427479647782)
+
+Possible dark or dimmed time range: 12:35.96 - 12:43.67 minutes
+Average value: 157.21621621621622, Max value: 225, Min value: 75, 75th Percentile: 225, Variance: 7336.53697805914
+Variance between channels: [890.48911614 737.48359386 758.34021914]
+Epileptic risk: 102.7, 37.1
+Likely dimmed scene! Undimming range:  (18143, 18328, 1.6283307546845451)
+
+Possible dark or dimmed time range: 12:59.42 - 13:0.04 minutes
+Average value: 69.73333333333333, Max value: 209, Min value: 0, 75th Percentile: 209, Variance: 10955.737722908088
+Variance between channels: [5361.79555556 3658.64888889 3455.79555556]
+Epileptic risk: 131.6, 98.4
+Likely dimmed scene! Undimming range:  (18706, 18721, 3.6711281070745696)
+
+Possible dark or dimmed time range: 13:19.79 - 13:29.79 minutes
+Average value: 186.94583333333333, Max value: 205, Min value: 116, 75th Percentile: 205, Variance: 3726.6688751714682
+Variance between channels: [137.73151042 313.03456597 416.45659722]
+Epileptic risk: 37.4, 36.4
+
+Possible dark or dimmed time range: 13:29.92 - 13:31.04 minutes
+Average value: 117.29629629629629, Max value: 174, Min value: 66, 75th Percentile: 174, Variance: 5333.346068519365
+Variance between channels: [1124.24142661  519.39368999  505.20987654]
+Epileptic risk: 98.7, 55.7
+Likely dimmed scene! Undimming range:  (19438, 19465, 2.1825071045153144)
+
+Possible dark or dimmed time range: 13:34.04 - 13:35.54 minutes
+Average value: 186.11111111111111, Max value: 187, Min value: 164, 75th Percentile: 187, Variance: 193.3794772138394
+Variance between channels: [4.36728395 0.15432099 3.13811728]
+Epileptic risk: 21.4, 14.8
+
+Possible dark or dimmed time range: 13:37.54 - 13:40.29 minutes
+Average value: 185.6060606060606, Max value: 188, Min value: 161, 75th Percentile: 188, Variance: 638.3289686993392
+Variance between channels: [71.29958678  2.63269054 46.271809  ]
+Epileptic risk: 23.0, 18.2
+
+Possible dark or dimmed time range: 13:46.62 - 13:47.62 minutes
+Average value: 183.5, Max value: 185, Min value: 146, 75th Percentile: 185, Variance: 3668.2893518518517
+Variance between channels: [32.25        1.5         5.16493056]
+Epileptic risk: 37.3, 32.0
+
+Possible dark or dimmed time range: 14:34.21 - 14:36.88 minutes
+Average value: 202.375, Max value: 229, Min value: 79, 75th Percentile: 229, Variance: 119952.36129195603
+Variance between channels: [ 72.796875   168.97241211 147.83178711]
+Epileptic risk: 78.1, 38.1
+Likely dimmed scene! Undimming range:  (20981, 21045, 1.2649783817171094)
+
+Possible dark or dimmed time range: 14:42.12 - 14:43.88 minutes
+Average value: 160.35714285714286, Max value: 208, Min value: 54, 75th Percentile: 208, Variance: 227506.0400604687
+Variance between channels: [ 537.64229025  864.71428571 1214.84807256]
+Epileptic risk: 108.1, 47.2
+Likely dimmed scene! Undimming range:  (21171, 21213, 1.5964365256124722)
+
+Possible dark or dimmed time range: 14:43.96 - 14:44.83 minutes
+Average value: 194.0, Max value: 225, Min value: 113, 75th Percentile: 225, Variance: 66433.53142409226
+Variance between channels: [488.76190476 590.53514739 480.65759637]
+Epileptic risk: 109.7, 64.7
+Likely dimmed scene! Undimming range:  (21215, 21236, 1.3195876288659794)
+
+Possible dark or dimmed time range: 14:59.75 - 15:2.75 minutes
+Average value: 134.91666666666666, Max value: 137, Min value: 110, 75th Percentile: 137, Variance: 172.25647767108674
+Variance between channels: [2.41358025 1.64737654 1.57638889]
+Epileptic risk: 83.8, 2.5
+
+Possible dark or dimmed time range: 15:5.67 - 15:8.17 minutes
+Average value: 225.2, Max value: 226, Min value: 200, 75th Percentile: 226, Variance: 34.87641975308638
+Variance between channels: [0.20305556 0.16       0.11555556]
+Epileptic risk: 19.4, 19.0
+
+Possible dark or dimmed time range: 15:16.42 - 15:17.25 minutes
+Average value: 220.95, Max value: 228, Min value: 208, 75th Percentile: 228, Variance: 20.944567901234567
+Variance between channels: [15.34    9.05    8.1475]
+Epileptic risk: 81.6, 2.1
+
+Possible dark or dimmed time range: 15:20.67 - 15:22.67 minutes
+Average value: 213.625, Max value: 216, Min value: 197, 75th Percentile: 216, Variance: 410.8578317901234
+Variance between channels: [21.53081597  1.49956597  2.36414931]
+Epileptic risk: 46.5, 11.4
+
+Possible dark or dimmed time range: 15:42.67 - 15:45.67 minutes
+Average value: 153.51388888888889, Max value: 229, Min value: 117, 75th Percentile: 140, Variance: 129.10558603871348
+Variance between channels: [ 801.02777778 1052.08314043 1143.12326389]
+Epileptic risk: 28.9, 22.9
+
+Possible dark or dimmed time range: 15:48.67 - 15:51.75 minutes
+Average value: 169.40540540540542, Max value: 221, Min value: 74, 75th Percentile: 221, Variance: 228.13238463688913
+Variance between channels: [3270.54656684 2831.54054054 3535.14846603]
+Epileptic risk: 30.6, 24.1
+
+Possible dark or dimmed time range: 15:55.17 - 16:0.67 minutes
+Average value: 173.41666666666666, Max value: 229, Min value: 79, 75th Percentile: 229, Variance: 2755.1616161616157
+Variance between channels: [3124.69674013 2498.04591368 4535.67969467]
+Epileptic risk: 24.4, 15.1
+
+Possible dark or dimmed time range: 16:6.88 - 16:7.67 minutes
+Average value: 223.31578947368422, Max value: 228, Min value: 187, 75th Percentile: 228, Variance: 3147.69180260593
+Variance between channels: [ 7.08033241  0.27146814 15.37396122]
+Epileptic risk: 21.3, 0.6
+
+Possible dark or dimmed time range: 16:7.71 - 16:8.67 minutes
+Average value: 207.65217391304347, Max value: 219, Min value: 187, 75th Percentile: 212, Variance: 1802.511890592546
+Variance between channels: [ 7.86767486  0.27977316 38.40075614]
+Epileptic risk: 22.3, 12.0
+
+Possible dark or dimmed time range: 16:10.67 - 16:14.17 minutes
+Average value: 212.47619047619048, Max value: 218, Min value: 173, 75th Percentile: 218, Variance: 2141.0540578371274
+Variance between channels: [ 5.74645692 18.40518707 18.53514739]
+Epileptic risk: 69.2, 4.9
+
+Possible dark or dimmed time range: 16:17.17 - 16:22.17 minutes
+Average value: 216.95833333333334, Max value: 222, Min value: 171, 75th Percentile: 222, Variance: 1359.437530864198
+Variance between channels: [5.58333333 1.55305556 2.12326389]
+Epileptic risk: 63.5, 6.0
+
+Possible dark or dimmed time range: 16:24.17 - 16:29.17 minutes
+Average value: 215.29166666666666, Max value: 216, Min value: 169, 75th Percentile: 216, Variance: 17027.06611796983
+Variance between channels: [185.44555556  11.09888889   0.98993056]
+Epileptic risk: 16.6, 9.7
+
+Possible dark or dimmed time range: 16:41.17 - 16:45.54 minutes
+Average value: 177.02857142857144, Max value: 225, Min value: 75, 75th Percentile: 225, Variance: 73.32693261666806
+Variance between channels: [1668.06657596 1665.91292517 1714.40054422]
+Epileptic risk: 89.2, 30.3
+Likely dimmed scene! Undimming range:  (24028, 24133, 1.44609425435765)
+
+Possible dark or dimmed time range: 16:45.79 - 17:14.12 minutes
+Average value: 202.25588235294117, Max value: 229, Min value: 140, 75th Percentile: 229, Variance: 3175.10313885685
+Variance between channels: [507.01171064 214.53086289 316.40465182]
+Epileptic risk: 38.2, 31.2
+
+Possible dark or dimmed time range: 17:14.21 - 17:18.67 minutes
+Average value: 202.33644859813083, Max value: 217, Min value: 162, 75th Percentile: 217, Variance: 6551.852994870437
+Variance between channels: [238.65315748 135.30474277  53.90200017]
+Epileptic risk: 45.7, 14.3
+
+Possible dark or dimmed time range: 17:26.67 - 17:42.79 minutes
+Average value: 217.63307493540051, Max value: 222, Min value: 203, 75th Percentile: 222, Variance: 59.46452351436025
+Variance between channels: [21.1893516   5.80301665  4.13674392]
+Epileptic risk: 30.4, 17.4
+
+Possible dark or dimmed time range: 18:19.42 - 18:34.54 minutes
+Average value: 173.62534435261708, Max value: 202, Min value: 86, 75th Percentile: 202, Variance: 1139980.4590004075
+Variance between channels: [1523.70370876  897.36927502  602.37634041]
+Epileptic risk: 15.5, 11.0
+
+Possible dark or dimmed time range: 18:37.54 - 18:54.25 minutes
+Average value: 172.0773067331671, Max value: 223, Min value: 0, 75th Percentile: 223, Variance: 1129478.7353865264
+Variance between channels: [6837.20131094 6292.88097711 6016.16575768]
+Epileptic risk: 12.9, 12.2
+
+Possible dark or dimmed time range: 18:59.00 - 19:5.12 minutes
+Average value: 204.3877551020408, Max value: 228, Min value: 87, 75th Percentile: 228, Variance: 1265185.1795679554
+Variance between channels: [3004.19501134   86.62899718  481.8806053 ]
+Epileptic risk: 36.5, 23.0
+
+Possible dark or dimmed time range: 19:5.17 - 19:6.00 minutes
+Average value: 224.0, Max value: 228, Min value: 205, 75th Percentile: 228, Variance: 111.96740740740738
+Variance between channels: [ 9.4475 11.1475  3.9   ]
+Epileptic risk: 46.9, 9.0
+
+Possible dark or dimmed time range: 19:9.62 - 19:10.25 minutes
+Average value: 223.6, Max value: 229, Min value: 205, 75th Percentile: 229, Variance: 49.88224965706447
+Variance between channels: [6.32888889 7.04       9.84      ]
+Epileptic risk: 41.2, 15.4
+
+Possible dark or dimmed time range: 19:10.29 - 19:11.04 minutes
+Average value: 224.05555555555554, Max value: 229, Min value: 208, 75th Percentile: 229, Variance: 107.5526596555403
+Variance between channels: [11.69444444 11.50617284  6.7191358 ]
+Epileptic risk: 48.5, 11.4
+
+Possible dark or dimmed time range: 19:11.08 - 19:12.88 minutes
+Average value: 188.8372093023256, Max value: 225, Min value: 134, 75th Percentile: 225, Variance: 3624.7293899271544
+Variance between channels: [1095.595457    307.42022715  375.39318551]
+Epileptic risk: 36.7, 29.8
+
+Possible dark or dimmed time range: 19:14.21 - 19:22.08 minutes
+Average value: 209.56084656084656, Max value: 229, Min value: 157, 75th Percentile: 229, Variance: 497.79179035329014
+Variance between channels: [935.19179194 637.4622211  224.29198511]
+Epileptic risk: 42.8, 22.7
+
+Possible dark or dimmed time range: 19:46.29 - 19:47.92 minutes
+Average value: 198.0, Max value: 219, Min value: 154, 75th Percentile: 208, Variance: 537.9245298333618
+Variance between channels: [ 51.57527942  73.16896778 142.13938199]
+Epileptic risk: 65.9, 44.1
+
+Possible dark or dimmed time range: 19:51.42 - 19:54.92 minutes
+Average value: 223.52380952380952, Max value: 226, Min value: 215, 75th Percentile: 226, Variance: 41.504157218442934
+Variance between channels: [0.48412698 0.78344671 2.46371882]
+Epileptic risk: 13.2, 8.2
+
+Possible dark or dimmed time range: 19:59.88 - 20:3.42 minutes
+Average value: 202.8, Max value: 223, Min value: 52, 75th Percentile: 223, Variance: 1679.2447075910973
+Variance between channels: [ 872.86560554 1153.69771626 1143.96595156]
+Epileptic risk: 36.9, 28.3
+
+Possible dark or dimmed time range: 20:7.42 - 20:10.79 minutes
+Average value: 222.71604938271605, Max value: 223, Min value: 198, 75th Percentile: 223, Variance: 144.95569592861662
+Variance between channels: [1.28882792 0.10821521 0.20332266]
+Epileptic risk: 14.2, 8.1
+
+Possible dark or dimmed time range: 20:27.67 - 20:31.67 minutes
+Average value: 225.54166666666666, Max value: 226, Min value: 188, 75th Percentile: 226, Variance: 130.67436128257876
+Variance between channels: [0.23567708 0.20214844 0.24826389]
+Epileptic risk: 15.0, 7.2
+
+Possible dark or dimmed time range: 20:44.75 - 20:47.58 minutes
+Average value: 217.52941176470588, Max value: 229, Min value: 204, 75th Percentile: 226, Variance: 60.03669528813703
+Variance between channels: [ 2.98507785 40.29757785 12.69031142]
+Epileptic risk: 93.7, 13.6
+Likely dimmed scene! Undimming range:  (29874, 29942, 1.1768523526230394)
+
+Possible dark or dimmed time range: 20:53.46 - 21:4.08 minutes
+Average value: 210.00392156862745, Max value: 228, Min value: 171, 75th Percentile: 228, Variance: 254.89724161172578
+Variance between channels: [344.29779316 150.51072664 407.84935025]
+Epileptic risk: 17.0, 11.9
+
+Possible dark or dimmed time range: 21:15.67 - 21:21.92 minutes
+Average value: 190.62, Max value: 215, Min value: 154, 75th Percentile: 215, Variance: 375.8050941015088
+Variance between channels: [560.70222222 410.14382222 413.95382222]
+Epileptic risk: 60.3, 25.6
+
+Possible dark or dimmed time range: 21:33.54 - 21:40.04 minutes
+Average value: 136.05128205128204, Max value: 140, Min value: 110, 75th Percentile: 140, Variance: 238.1464679669808
+Variance between channels: [2.81245891 1.53201019 1.9460881 ]
+Epileptic risk: 69.8, 5.8
+
+Possible dark or dimmed time range: 21:58.67 - 22:3.75 minutes
+Average value: 225.50819672131146, Max value: 229, Min value: 161, 75th Percentile: 229, Variance: 113017.1127766663
+Variance between channels: [  8.16668906   4.82054555 407.23763773]
+Epileptic risk: 50.0, 4.1
+
+Possible dark or dimmed time range: 23:11.29 - 23:12.62 minutes
+Average value: 178.6875, Max value: 204, Min value: 62, 75th Percentile: 204, Variance: 37271.968364197535
+Variance between channels: [2643.54589844 1332.79589844  890.85839844]
+Epileptic risk: 118.0, 39.3
+Likely dimmed scene! Undimming range:  (33391, 33423, 1.4326687653025534)
+
+Possible dark or dimmed time range: 23:13.04 - 23:13.96 minutes
+Average value: 198.5909090909091, Max value: 203, Min value: 158, 75th Percentile: 203, Variance: 567.7438016528923
+Variance between channels: [ 74.69628099 125.36363636 140.92561983]
+Epileptic risk: 102.8, 74.5
+Likely dimmed scene! Undimming range:  (33433, 33455, 1.2890821698329138)
+
+Possible dark or dimmed time range: 23:21.50 - 23:22.25 minutes
+Average value: 199.55555555555554, Max value: 229, Min value: 62, 75th Percentile: 229, Variance: 261903.2348727329
+Variance between channels: [ 21.22222222 348.64506173 256.13580247]
+Epileptic risk: 126.5, 66.1
+Likely dimmed scene! Undimming range:  (33636, 33654, 1.2828507795100224)
+
+Possible dark or dimmed time range: 23:37.62 - 23:38.58 minutes
+Average value: 100.26086956521739, Max value: 181, Min value: 0, 75th Percentile: 181, Variance: 9711.245536651963
+Variance between channels: [3122.71455577 3334.4536862  4001.81096408]
+Epileptic risk: 109.2, 82.9
+Likely dimmed scene! Undimming range:  (34023, 34046, 2.5533391153512577)
+
+Dimmed scenes (start, stop, dim factor):  [(6000, 6038, 2.723404255319149), (6074, 6143, 2.127680077089858), (9920, 9959, 2.102337334175616), (14630, 14681, 2.042553191489362), (14747, 14819, 2.6923751095530237), (18150, 18166, 2.441001191895113), (18248, 18328, 1.8160858384322072), (19441, 19462, 2.4129263913824057), (5994, 6047, 2.3094468085106383), (6074, 6143, 2.127680077089858), (8754, 8935, 1.5159823327335187), (8936, 8990, 1.428099173553719), (9059, 9118, 1.5001986491855384), (9515, 9638, 1.566723057020599), (9920, 9960, 2.0741340895280533), (10244, 10259, 1.4014598540145986), (12851, 12875, 1.812924166420773), (14630, 14681, 2.042553191489362), (14747, 14819, 2.6923751095530237), (18148, 18190, 1.8392062949024972), (18191, 18207, 1.3847194050033806), (18208, 18230, 1.3916481344205582), (18247, 18328, 1.8143319625514045), (19438, 19465, 2.1825071045153144), (21171, 21191, 1.7215870880968394), (21197, 21212, 1.6326530612244896), (24052, 24110, 1.7388452980442675), (34023, 34046, 2.5533391153512577), (5886, 6143, 1.624453717192168), (6847, 6867, 1.3027989821882953), (8754, 9118, 1.4495675440233964), (9515, 9728, 1.434645337823616), (9878, 10004, 1.4519918973666444), (10244, 10310, 1.3676542010684798), (11305, 11330, 1.137373378354363), (11594, 11700, 1.3072550342036806), (11908, 11923, 1.2955465587044535), (12850, 12875, 1.7867113344500278), (14579, 14681, 1.4911769744731882), (14747, 14819, 2.6923751095530237), (17026, 17048, 1.1588477366255143), (18040, 18112, 1.1696915852265515), (18113, 18142, 1.233427479647782), (18143, 18328, 1.6283307546845451), (18706, 18721, 3.6711281070745696), (19438, 19465, 2.1825071045153144), (20981, 21045, 1.2649783817171094), (21171, 21213, 1.5964365256124722), (21215, 21236, 1.3195876288659794), (24028, 24133, 1.44609425435765), (29874, 29942, 1.1768523526230394), (33391, 33423, 1.4326687653025534), (33433, 33455, 1.2890821698329138), (33636, 33654, 1.2828507795100224), (34023, 34046, 2.5533391153512577)]
+Moviepy - Building video output_ep15.mkv.
+MoviePy - Writing audio in output_ep15TEMP_MPY_wvf_snd.mp4
+MoviePy - Done.                                                               
+Moviepy - Writing video output_ep15.mkv
+
+Moviepy - Done !                                                              
+Moviepy - video ready output_ep15.mkv
