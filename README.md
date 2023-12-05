@@ -3,7 +3,10 @@
 This python script exactly removes the dim filters for a segment of an anime clip. For an n minute episode, it takes between n/2 and n minutes to run this script.
 
 ## Installation
-``
+```
+pip install -r requirements.txt
+```
+
 ## Usage
 ```
 python color_multiply.py ep15.mkv tmp.mkv --only_plot
