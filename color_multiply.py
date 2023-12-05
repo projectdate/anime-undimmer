@@ -158,18 +158,18 @@ def get_dimmed_scenes(input_file, show_plot, threshold):
         max_value_no_outliers = calculate_max_without_outliers(range_values)
         min_value = np.min([np.min(val) for val in range_values])
         variance = np.var([np.var(val) for val in range_values])
-        print(f"Average value: {avg_value}, Max value: {max_value}, Min value: {min_value}, 75th Percentile: {max_value_no_outliers}, Variance: {variance}")
+        print(f"Average value: {avg_value:.2f}, Max value: {max_value}, Min value: {min_value}, 75th Percentile: {max_value_no_outliers}, Variance: {variance:.2f}")
         if len(range_values) > 0:
             filtered_values = [x for x in range_values if isinstance(x, np.ndarray) and x.shape == (3,)]
             if len(filtered_values) > 0:
-                print(f"Variance between channels: {np.var(filtered_values, axis=0)}")
+                print(f"Variance between channels: {[round(var, 2) for var in np.var(filtered_values, axis=0)]}")
         
         # Get the exact frame values in the range using a generator to avoid creating a large temporary list
         exact_frame_values = frame_generator(clip, start, end)
         risk_mean, risk_stddev = calculate_epilepsy_risk(exact_frame_values)
         print(f"Epileptic risk: {risk_mean:.1f}, {risk_stddev:.1f}")
         if risk_mean > 75 and risk_stddev > 7:
-            print("Likely dimmed scene! Undimming range: ", (start, end, 256 / avg_value))
+            print(f"Likely dimmed scene! Undimming range:  ({start}, {end}, {256 / avg_value:.2f})")
             # TODO: Instead of putting 256, put the neighboring scene maxes
             dimmed_ranges.append((start, end, 256 / avg_value))
         print("")
@@ -203,15 +203,29 @@ def main():
     parser = argparse.ArgumentParser(description='Multiply color values in a video by a factor.')
     parser.add_argument('input_file', type=str, help='Path to the input video file')
     parser.add_argument('output_file', type=str, help='Path to the output video file')
-    # parser.add_argument('factor', type=float, help='Factor to multiply color values by')
     parser.add_argument('--only_plot', action='store_true', help='Only plot max frame value for each quarter second')
+    parser.add_argument('--custom_scene', nargs=3, metavar=('start', 'end', 'factor'), help='Define a custom dimmed scene with start time, end time (in minutes:seconds or seconds), and dim factor')
 
     args = parser.parse_args()
+
+    def time_to_frame(time_str):
+        if ':' in time_str:
+            minutes, seconds = map(float, time_str.split(':'))
+        else:
+            minutes = 0
+            seconds = float(time_str)
+        return int((minutes * 60 + seconds) * 24)  # assuming 24 frames per second
 
     if(args.only_plot):
         get_dimmed_scenes(args.input_file, args.only_plot, 0)
     else:
-        dimmed_scenes = get_all_dimmed_scenes(args.input_file, args.only_plot)
+        if args.custom_scene:
+            start, end, factor = args.custom_scene
+            start = time_to_frame(start)
+            end = time_to_frame(end)
+            dimmed_scenes = [(start, end, factor)]
+        else:
+            dimmed_scenes = get_all_dimmed_scenes(args.input_file, args.only_plot)
         print("Dimmed scenes (start, stop, dim factor): ", dimmed_scenes)
         process_video(args.input_file, args.output_file, dimmed_scenes)
 
