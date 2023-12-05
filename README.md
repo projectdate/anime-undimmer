@@ -3,6 +3,8 @@
 This python script exactly removes the dim filters for a segment of an anime clip. For an n minute episode, it takes approximately 3n minutes to run this script.
 
 ## Installation
+
+I use Python 3.11.4 with pip 23.1.2. It will probably run on any Python3.
 ```
 pip install -r requirements.txt
 ```

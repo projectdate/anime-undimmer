@@ -78,9 +78,9 @@ def calculate_max_without_outliers(values):
 
 def get_dimmed_scenes(input_file, show_plot, threshold):
     """
-    Plot max frame value for each half second throughout the video.
+    Return (or plot) scene ranges with dim factors throughout the video.
     This function takes in an input video file and a boolean value for whether to show the plot or not.
-    It calculates the maximum frame value for each half second throughout the video and plots it.
+    If show_plot, it only calculates the maximum frame value for each half second throughout the video and plots it.
     If show_plot is True, it will display the plot and return an empty list.
     If show_plot is False, it will not display the plot and will return a list of time ranges where at least 15 consecutive frames have a max below 190.
     The returned time ranges represent the dimmed scenes in the video.
@@ -178,12 +178,12 @@ def get_dimmed_scenes(input_file, show_plot, threshold):
 
 def get_all_dimmed_scenes(input_file, show_plot):
     """
-    Plot max frame value for each half second throughout the video.
+    Return (or plot) scene ranges with dim factors throughout the video for a variety of dim thresholds.
     This function takes in an input video file and a boolean value for whether to show the plot or not.
-    It calculates the maximum frame value for each half second throughout the video and plots it.
+    If show_plot, it only calculates the maximum frame value for each half second throughout the video and plots it.
     If show_plot is True, it will display the plot and return an empty list.
     If show_plot is False, it will not display the plot and will return a list of time ranges where at least 15 consecutive frames have a max below 190.
-    The returned time ranges represent the dimmed scenes in the video.
+    The returned time ranges represent the dimmed scenes in the video, ordered by most dim first.
     
     Parameters:
     input_file (str): The path to the input video file.
