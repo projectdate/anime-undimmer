@@ -2,6 +2,8 @@ import argparse
 from moviepy.editor import VideoFileClip
 import numpy as np
 import matplotlib.pyplot as plt
+import os
+import pickle
 
 def multiply_colors(frame, dimmed_scenes, current_frame):
     """
@@ -60,6 +62,67 @@ def calculate_epilepsy_risk(frame_values_gen):
     # If the standard deviation is high, the video is more likely to cause epilepsy
     return mean_abs_sum_diff, std_abs_sum_diff
 
+def calculate_epilepsy_risk_v2(frame_values_gen):
+    """
+    Calculate the risk of epilepsy for a video based on luminescence calculations.
+
+    This function calculates the risk based on the following guidelines:
+    - A potentially harmful flash occurs when there is a pair of opposing changes in luminance of 20cd/m2 or more.
+    - This applies only when the screen luminance of the darker image is below 160cd/m2.
+    - Irrespective of luminance, a transition to or from a saturated red is also potentially harmful.
+    - A sequence of flashes is not permitted when both the following occur: 
+        (a) the combined area of flashes occurring concurrently occupies more than 25% of the displayed screen area and 
+        (b) the flash frequency is higher than 3Hz.
+    - A sequence of flashing images lasting more than 5s might constitute a risk even when it complies with the guidelines above.
+    - Rapidly changing image sequences are provocative if they result in areas of the screen that flash, in which case the same constraints apply as for flashes.
+
+    - Based on the Ofcom guidelines specified here: https://arxiv.org/pdf/2108.09491.pdf and here: https://trace.umd.edu/peat/ and here: https://ieeexplore.ieee.org/document/7148104
+    Parameters:
+    frame_values_gen (generator): A generator that yields the pixel values for each frame in the video.
+
+    Returns:
+    risk: A boolean indicating whether the video poses a risk of epilepsy.
+    """
+    # Initialize variables
+    prev_frame_values = next(frame_values_gen)
+    flash_count = 0
+    flash_duration = 0
+    fps = 24
+    risk = False
+
+    # Initialize a variable to keep track of the number of frames
+    frame_count = 0
+    
+    # Iterate over the generator
+    for frame_values in frame_values_gen:
+        # Calculate the difference between consecutive frames
+        frame_diffs = frame_values - prev_frame_values
+        # Check for harmful flash
+        if np.mean(np.abs(frame_diffs)) > 20 and np.mean(prev_frame_values) < 160:
+            flash_count += 1
+            
+        # Check for transition to or from saturated red
+        if np.any(np.isclose(frame_values, [255, 0, 0])) or np.any(np.isclose(prev_frame_values, [255, 0, 0])):
+            flash_count += 1
+            
+        # Update frame count
+        frame_count += 1
+        
+        # Check for sequence of flashes per second
+        if frame_count == fps:
+            if flash_count > 3:
+                risk = True
+                break
+            else:
+                # Reset flash count and frame count for the next second
+                flash_count = 0
+                frame_count = 0
+        
+        # Update previous frame values
+        prev_frame_values = frame_values
+        
+    return risk
+
 def frame_generator(clip, start, end):
     start_frame = int(start)
     end_frame = int(end)
@@ -70,11 +133,114 @@ def frame_generator(clip, start, end):
             break
         yield frame
 
-def calculate_max_without_outliers(values):
-    q75, q25 = np.percentile(values, [75 ,25])
+# Calculates mean of the max luminescence of each frame
+def calculate_mean_without_outliers(values):
+    q75, q25 = np.percentile(values, [75, 25])
     iqr = q75 - q25
     threshold_values = [x for x in values if ((q25 - 1.5*iqr) <= np.max(x) <= (q75 + 1.5*iqr))]
-    return np.max([np.max(val) for val in threshold_values])
+    return np.mean([np.max(val) for val in threshold_values])
+
+def load_values(input_file, clip):
+    """
+    Load the max and avg values from the cache file if it exists, otherwise calculate them and store them in the cache file.
+    """
+    print("Starting analysis...")
+    max_values = []
+    avg_values = []
+    
+    # Define the cache file path
+    cache_file = f"{input_file}_max_and_avg_values.pkl"
+    
+    # Check if the cache file exists
+    if os.path.exists(cache_file):
+        print("Cached!")
+        # Load the max and avg values from the cache file
+        with open(cache_file, 'rb') as f:
+            max_values, avg_values = pickle.load(f)
+    else:
+        print("Not cached!")
+        # Calculate the max and avg values and store them in the cache file
+        for i, (t, frame) in enumerate(clip.iter_frames(with_times=True)):
+            max_frame = np.max(frame, axis=(0, 1))
+            avg_frame = np.mean(frame, axis=(0, 1))
+            max_values.append(max_frame)
+            avg_values.append(avg_frame)
+        with open(cache_file, 'wb') as f:
+            pickle.dump((max_values, avg_values), f)
+    
+    print("Loaded max and avg values!")
+    return max_values, avg_values
+
+def calculate_max_values_per_6_frames(max_values):
+    """
+    Calculate max_values_per_6_frames from every 6 frames in max_values.
+    """
+    max_values_per_6_frames = []
+    for i in range(0, len(max_values), 6):
+        frames_to_average = max_values[i:i+6]
+        max_frame = np.max(frames_to_average, axis=0)
+        max_values_per_6_frames.append(max_frame)
+    return max_values_per_6_frames
+
+def plot_max_values(max_values_per_6_frames):
+    """
+    Plot the max_values_per_6_frames and show the plot.
+    """
+    plt.plot([x/4 for x in range(len(max_values_per_6_frames))], [np.max(val) for val in max_values_per_6_frames])
+    plt.title('Max frame value per quarter second')
+    # plt.xlim(0, len(max_values_per_6_frames)/4)  # Set x-axis range to match the number of data points in seconds
+    plt.show()
+
+def find_dark_and_dimmed_ranges(max_values, threshold):
+    """
+    Find all the time ranges where at least 15 consecutive frames have a max below threshold.
+    """
+    dark_and_dimmed_ranges = []
+    count = 0
+    start_time = 0
+    for i, value in enumerate(max_values):
+        if np.max(value) < threshold:
+            if count == 0:
+                start_time = i  # Convert frame index to time in seconds
+            count += 1
+        else:
+            if count >= 15:
+                dark_and_dimmed_ranges.append((start_time, i))  # Add the start and end time of the range
+            count = 0
+    if count >= 15:
+        dark_and_dimmed_ranges.append((start_time, len(max_values)))  # Add the last range if it ends at the end of the video
+    return dark_and_dimmed_ranges
+
+def print_range_characteristics(max_values, dark_and_dimmed_ranges):
+    """
+    Print characteristics of the values in each range.
+    """
+    dimmed_ranges = []
+    for start, end in dark_and_dimmed_ranges:
+        range_values = max_values[int(start):int(end)]  # Get the values in the range
+        print(f"Possible dark or dimmed time range: {int((start / 24)/60)}:{(start / 24)%60:.2f} - {int((end / 24)/60)}:{(end / 24)%60:.2f} minutes")
+        avg_value = np.mean([np.max(val) for val in range_values])
+        max_value = np.max([np.max(val) for val in range_values])
+        mean_value_no_outliers = calculate_mean_without_outliers(range_values)
+        min_value = np.min([np.min(val) for val in range_values])
+        variance = np.var([np.var(val) for val in range_values])
+        print(f"Average value: {avg_value:.2f}, Max value: {max_value}, Min value: {min_value}, Mean without Outliers: {mean_value_no_outliers}, Variance: {variance:.2f}")
+        if len(range_values) > 0:
+            filtered_values = [x for x in range_values if isinstance(x, np.ndarray) and x.shape == (3,)]
+            if len(filtered_values) > 0:
+                print(f"Variance between channels: {[round(var, 2) for var in np.var(filtered_values, axis=0)]}")
+        
+        # Get the exact frame values in the range using a generator to avoid creating a large temporary list
+        exact_frame_values = frame_generator(clip, start, end)
+        risk_mean, risk_stddev = calculate_epilepsy_risk(exact_frame_values)
+        print(f"Epileptic risk: {risk_mean:.1f}, {risk_stddev:.1f}")
+        if risk_mean > 75 and risk_stddev > 8:
+            print(f"Likely dimmed scene! Undimming range:  ({start}, {end}, {256 / avg_value:.2f})")
+            # TODO: Instead of putting 256, put the neighboring scene maxes
+            dimmed_ranges.append((start, end, 256 / avg_value))
+        print("")
+        
+    return dimmed_ranges
 
 def get_dimmed_scenes(input_file, show_plot, threshold):
     """
@@ -93,88 +259,38 @@ def get_dimmed_scenes(input_file, show_plot, threshold):
     list: A list of time ranges (start frame, end frame, factor) representing the dimmed scenes in the video and how much to undim them by, if show_plot is False. An empty list if show_plot is True.
     """
     clip = VideoFileClip(input_file)
-    print("Starting analysis...")
-    max_values = []
-    max_values_per_6_frames = []
-    import os
-    import pickle
+    max_values, avg_values = load_values(input_file, clip)
+    max_values_per_6_frames = calculate_max_values_per_6_frames(max_values)
     
-    # Define the cache file path
-    cache_file = f"{input_file}_max_values.pkl"
-    
-    # Check if the cache file exists
-    if os.path.exists(cache_file):
-        print("Cached!")
-        # Load the max values from the cache file
-        with open(cache_file, 'rb') as f:
-            max_values = pickle.load(f)
-    else:
-        print("Not cached!")
-        # Calculate the max values and store them in the cache file
-        for i, (t, frame) in enumerate(clip.iter_frames(with_times=True)):
-            max_frame = np.max(frame, axis=(0, 1))
-            max_values.append(max_frame)
-        with open(cache_file, 'wb') as f:
-            pickle.dump(max_values, f)
-    
-    print("Loaded max values!")
-    
-    # Calculate max_values_per_6_frames from every 6 frames in max_values
-    for i in range(0, len(max_values), 6):
-        frames_to_average = max_values[i:i+6]
-        max_frame = np.max(frames_to_average, axis=0)
-        max_values_per_6_frames.append(max_frame)
-        
     if show_plot:
-        plt.plot([x/4 for x in range(len(max_values_per_6_frames))], [np.max(val) for val in max_values_per_6_frames])
-        plt.title('Max frame value per quarter second')
-        plt.xlim(0, len(max_values_per_6_frames)/4)  # Set x-axis range to match the number of data points in seconds
-        plt.show()
+        plot_max_values(max_values_per_6_frames)
         return []
     
-    # Find all the time ranges where at least 15 consecutive frames have a max below threshold
-    dark_and_dimmed_ranges = []
-    count = 0
-    start_time = 0
-    for i, value in enumerate(max_values):
-        if np.max(value) < threshold:
-            if count == 0:
-                start_time = i  # Convert frame index to time in seconds
-            count += 1
-        else:
-            if count >= 15:
-                dark_and_dimmed_ranges.append((start_time, i))  # Add the start and end time of the range
-            count = 0
-    if count >= 15:
-        dark_and_dimmed_ranges.append((start_time, len(max_values)))  # Add the last range if it ends at the end of the video
-    
-    # Print characteristics of the values in each range
-    dimmed_ranges = []
-    for start, end in dark_and_dimmed_ranges:
-        range_values = max_values[int(start):int(end)]  # Get the values in the range
-        print(f"Possible dark or dimmed time range: {int((start / 24)/60)}:{(start / 24)%60:.2f} - {int((end / 24)/60)}:{(end / 24)%60:.2f} minutes")
-        avg_value = np.mean([np.max(val) for val in range_values])
-        max_value = np.max([np.max(val) for val in range_values])
-        max_value_no_outliers = calculate_max_without_outliers(range_values)
-        min_value = np.min([np.min(val) for val in range_values])
-        variance = np.var([np.var(val) for val in range_values])
-        print(f"Average value: {avg_value:.2f}, Max value: {max_value}, Min value: {min_value}, 75th Percentile: {max_value_no_outliers}, Variance: {variance:.2f}")
-        if len(range_values) > 0:
-            filtered_values = [x for x in range_values if isinstance(x, np.ndarray) and x.shape == (3,)]
-            if len(filtered_values) > 0:
-                print(f"Variance between channels: {[round(var, 2) for var in np.var(filtered_values, axis=0)]}")
-        
-        # Get the exact frame values in the range using a generator to avoid creating a large temporary list
-        exact_frame_values = frame_generator(clip, start, end)
-        risk_mean, risk_stddev = calculate_epilepsy_risk(exact_frame_values)
-        print(f"Epileptic risk: {risk_mean:.1f}, {risk_stddev:.1f}")
-        if risk_mean > 75 and risk_stddev > 7:
-            print(f"Likely dimmed scene! Undimming range:  ({start}, {end}, {256 / avg_value:.2f})")
-            # TODO: Instead of putting 256, put the neighboring scene maxes
-            dimmed_ranges.append((start, end, 256 / avg_value))
-        print("")
-        
+    dark_and_dimmed_ranges = find_dark_and_dimmed_ranges(max_values, threshold)
+    dimmed_ranges = print_range_characteristics(max_values, dark_and_dimmed_ranges)
     return dimmed_ranges
+
+def get_dim_factor(input_file, start, end):
+    """
+    Given a time range, return the dim factor.
+    
+    Parameters:
+    input_file (str): The path to the input video file.
+    start (int): The start frame number of the time range.
+    end (int): The end frame number of the time range.
+
+    Returns:
+    float: The dim factor for the given time range.
+    """
+    clip = VideoFileClip(input_file)
+    max_values, avg_values = load_values(input_file, clip)
+    range_values = max_values[int(start):int(end)]  # Get the values in the range
+    avg_value = np.mean([np.max(val) for val in range_values])
+    mean_value_no_outliers = calculate_mean_without_outliers(range_values)
+    dim_factor = 256 / avg_value
+    print("Dim factor autocalculated: ", dim_factor)
+    return dim_factor
+
 
 def get_all_dimmed_scenes(input_file, show_plot):
     """
@@ -204,7 +320,7 @@ def main():
     parser.add_argument('input_file', type=str, help='Path to the input video file')
     parser.add_argument('output_file', type=str, help='Path to the output video file')
     parser.add_argument('--only_plot', action='store_true', help='Only plot max frame value for each quarter second')
-    parser.add_argument('--custom_scene', nargs=3, metavar=('start', 'end', 'factor'), help='Define a custom dimmed scene with start time, end time (in minutes:seconds or seconds), and dim factor')
+    parser.add_argument('--custom_scene', nargs=3, metavar=('start', 'end', 'factor'), help='Define a custom dimmed scene with start time, end time (in minutes:seconds or seconds), and optional dim factor (if 0, we will auto-calculate)')
 
     args = parser.parse_args()
 
@@ -220,13 +336,14 @@ def main():
         get_dimmed_scenes(args.input_file, args.only_plot, 0)
     else:
         if args.custom_scene:
-            start, end, factor = args.custom_scene
+            start, end, *factor = args.custom_scene
             start = time_to_frame(start)
             end = time_to_frame(end)
+            factor = float(factor[0]) if factor else get_dim_factor(args.input_file, start, end)
             dimmed_scenes = [(start, end, factor)]
         else:
             dimmed_scenes = get_all_dimmed_scenes(args.input_file, args.only_plot)
-        print("Dimmed scenes (start, stop, dim factor): ", dimmed_scenes)
+        print("Dimmed scenes (start frame, stop frame, dim factor): ", dimmed_scenes)
         process_video(args.input_file, args.output_file, dimmed_scenes)
 
 if __name__ == "__main__":
