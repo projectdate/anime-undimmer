@@ -336,10 +336,11 @@ def main():
         get_dimmed_scenes(args.input_file, args.only_plot, 0)
     else:
         if args.custom_scene:
-            start, end, *factor = args.custom_scene
+            start, end, factor = args.custom_scene
             start = time_to_frame(start)
             end = time_to_frame(end)
-            factor = float(factor[0]) if factor else get_dim_factor(args.input_file, start, end)
+            factor = float(factor)
+            factor = factor if factor > 0.0 else get_dim_factor(args.input_file, start, end)
             dimmed_scenes = [(start, end, factor)]
         else:
             dimmed_scenes = get_all_dimmed_scenes(args.input_file, args.only_plot)
