@@ -53,7 +53,7 @@ def calculate_epilepsy_risk(frame_values_gen):
     # Convert list to numpy array
     abs_sum_diffs = np.array(abs_sum_diffs)
     # Calculate the proportion of abs_sum_diffs that are more than 20
-    flash_proportion = np.sum(abs_sum_diffs > 20) / frame_count
+    flash_count = np.sum(abs_sum_diffs > 20)
     # Calculate the mean of the absolute sum of differences
     risk_mean = np.mean(abs_sum_diffs)
     # Calculate the standard deviation of the absolute sum of differences
@@ -62,7 +62,7 @@ def calculate_epilepsy_risk(frame_values_gen):
     # print(f"Mean consecutive frames difference: {risk_mean}")
     # print(f"Standard deviation of consecutive frame differences: {risk_stddev}")
     # If the standard deviation is high, the video is more likely to cause epilepsy
-    print(f"Epileptic risk: {risk_mean:.1f}, {risk_stddev:.1f}. Flashes: {flash_proportion:.1f} in {frame_count:.1f} frames")
+    print(f"Epileptic risk: {risk_mean:.1f}, {risk_stddev:.1f}. Flashes: {flash_count / frame_count:.2f}, {flash_count} in {frame_count} frames")
     if risk_mean > 10:
         # and risk_stddev > 8:
         return True
@@ -228,7 +228,7 @@ def print_range_characteristics(clip, max_values, dark_and_dimmed_ranges):
     dimmed_ranges = []
     for start, end in dark_and_dimmed_ranges:
         range_values = max_values[int(start):int(end)]  # Get the values in the range
-        print(f"Possible dark or dimmed time range: {int((start / 24)/60)}:{(start / 24)%60:.2f} - {int((end / 24)/60)}:{(end / 24)%60:.2f} minutes")
+        print(f"Possible dark or dimmed time range: {frame_to_time(start)} - {frame_to_time(end)} minutes")
         avg_value = np.mean([np.max(val) for val in range_values])
         max_value = np.max([np.max(val) for val in range_values])
         mean_value_no_outliers = calculate_mean_without_outliers(range_values)
@@ -247,6 +247,9 @@ def print_range_characteristics(clip, max_values, dark_and_dimmed_ranges):
             print(f"Likely dimmed scene! Undimming range:  ({start}, {end}, {256 / avg_value:.2f})")
             # TODO: Instead of putting 256, put the neighboring scene maxes
             dimmed_ranges.append((start, end, 256 / avg_value))
+        else:
+            print(f"Likely NOT dimmed scene, just dark! If it was, dim range:  ({start}, {end}, {256 / avg_value:.2f})")
+            
         print("")
         
     return dimmed_ranges
@@ -297,6 +300,8 @@ def get_dim_factor(input_file, start, end):
     avg_value = np.mean([np.max(val) for val in range_values])
     mean_value_no_outliers = calculate_mean_without_outliers(range_values)
     dim_factor = 256 / avg_value
+    # Print the range characteristics to use as debugging
+    print_range_characteristics(clip, max_values, [(int(start),int(end))])
     print("Dim factor autocalculated: ", dim_factor)
     return dim_factor
 
@@ -321,39 +326,57 @@ def get_all_dimmed_scenes(input_file, show_plot):
     dimmed_scenes = []
     thresholds.sort() # This is neccessary due to the way we apply most aggressive filters first
     for threshold in thresholds:
+        print("---------CALCULATING FOR THRESHOLD {threshold}----------------")
         dimmed_scenes.extend(get_dimmed_scenes(input_file, show_plot, threshold))
     return dimmed_scenes
+
+def time_to_frame(time_str):
+    if ':' in time_str:
+        minutes, seconds = map(float, time_str.split(':'))
+    else:
+        minutes = 0
+        seconds = float(time_str)
+    return int((minutes * 60 + seconds) * 24)  # assuming 24 frames per second
+    
+def frame_to_time(frame_num):
+    """
+    Convert frame number to timestamp in minute:second format.
+    
+    Parameters:
+    frame_num (int): The frame number to convert to timestamp.
+    
+    Returns:
+    str: The timestamp in minute:second format corresponding to the frame number.
+    """
+    minutes = frame_num // (24 * 60)
+    seconds = (frame_num / 24) % 60
+    return f"{minutes:02d}:{seconds:.2f}"
 
 def main():
     parser = argparse.ArgumentParser(description='Multiply color values in a video by a factor.')
     parser.add_argument('input_file', type=str, help='Path to the input video file')
     parser.add_argument('output_file', type=str, help='Path to the output video file')
     parser.add_argument('--only_plot', action='store_true', help='Only plot max frame value for each quarter second')
-    parser.add_argument('--custom_scene', nargs=3, metavar=('start', 'end', 'factor'), help='Define a custom dimmed scene with start time, end time (in minutes:seconds or seconds), and optional dim factor (if 0, we will auto-calculate)')
+    parser.add_argument('--custom_scene', nargs=3, metavar=('start', 'end', 'factor (0 to auto-calculate)'), help='Define a custom dimmed scene with start time, end time (in minutes:seconds or seconds), and optional dim factor (if 0, we will auto-calculate)')
 
     args = parser.parse_args()
 
-    def time_to_frame(time_str):
-        if ':' in time_str:
-            minutes, seconds = map(float, time_str.split(':'))
-        else:
-            minutes = 0
-            seconds = float(time_str)
-        return int((minutes * 60 + seconds) * 24)  # assuming 24 frames per second
 
     if(args.only_plot):
         get_dimmed_scenes(args.input_file, args.only_plot, 0)
     else:
         if args.custom_scene:
             start, end, factor = args.custom_scene
-            start = time_to_frame(start)
-            end = time_to_frame(end)
-            factor = float(factor)
-            factor = factor if factor > 0.0 else get_dim_factor(args.input_file, start, end)
+            start, end = time_to_frame(start), time_to_frame(end)
+            factor = float(factor) if float(factor) > 0.0 else get_dim_factor(args.input_file, start, end)
             dimmed_scenes = [(start, end, factor)]
         else:
             dimmed_scenes = get_all_dimmed_scenes(args.input_file, args.only_plot)
-        print("Dimmed scenes (start frame, stop frame, dim factor): ", dimmed_scenes)
+            
+        # Convert frame numbers to timestamps just for printing
+        dimmed_scenes_timestamps = [(frame_to_time(start), frame_to_time(end), factor) for start, end, factor in dimmed_scenes]
+        print("Dimmed scenes (start time, stop time, dim factor): ", dimmed_scenes_timestamps)
+        
         process_video(args.input_file, args.output_file, dimmed_scenes)
 
 if __name__ == "__main__":
