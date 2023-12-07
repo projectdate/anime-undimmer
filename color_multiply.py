@@ -44,27 +44,35 @@ def calculate_epilepsy_risk(frame_values_gen):
     # Iterate over the generator
     for frame_values in frame_values_gen:
         # Calculate the difference between consecutive frames
-        frame_diffs = frame_values - prev_frame_values
-        # Calculate the absolute sum of pixel differences for each frame difference
+        frame_diffs = frame_values.astype(int) - prev_frame_values.astype(int)        # Calculate the absolute sum of pixel differences for each frame difference
         abs_sum_diffs.append(np.mean(np.abs(frame_diffs)))
         # Update previous frame values
         prev_frame_values = frame_values
 
+    frame_count = len(abs_sum_diffs)
     # Convert list to numpy array
     abs_sum_diffs = np.array(abs_sum_diffs)
+    # Calculate the proportion of abs_sum_diffs that are more than 20
+    flash_proportion = np.sum(abs_sum_diffs > 20) / frame_count
     # Calculate the mean of the absolute sum of differences
-    mean_abs_sum_diff = np.mean(abs_sum_diffs)
+    risk_mean = np.mean(abs_sum_diffs)
     # Calculate the standard deviation of the absolute sum of differences
-    std_abs_sum_diff = np.std(abs_sum_diffs)
+    risk_stddev = np.std(abs_sum_diffs)
     # Print the mean and standard deviation of the absolute sum of differences
-    # print(f"Mean consecutive frames difference: {mean_abs_sum_diff}")
-    # print(f"Standard deviation of consecutive frame differences: {std_abs_sum_diff}")
+    # print(f"Mean consecutive frames difference: {risk_mean}")
+    # print(f"Standard deviation of consecutive frame differences: {risk_stddev}")
     # If the standard deviation is high, the video is more likely to cause epilepsy
-    return mean_abs_sum_diff, std_abs_sum_diff
+    print(f"Epileptic risk: {risk_mean:.1f}, {risk_stddev:.1f}. Flashes: {flash_proportion:.1f} in {frame_count:.1f} frames")
+    if risk_mean > 10:
+        # and risk_stddev > 8:
+        return True
+    return False
 
 def calculate_epilepsy_risk_v2(frame_values_gen):
     """
     Calculate the risk of epilepsy for a video based on luminescence calculations.
+    
+    Unfortunately, this isn't tuned very well and seems to fail.
 
     This function calculates the risk based on the following guidelines:
     - A potentially harmful flash occurs when there is a pair of opposing changes in luminance of 20cd/m2 or more.
@@ -92,34 +100,36 @@ def calculate_epilepsy_risk_v2(frame_values_gen):
 
     # Initialize a variable to keep track of the number of frames
     frame_count = 0
+    i = 0
     
     # Iterate over the generator
     for frame_values in frame_values_gen:
         # Calculate the difference between consecutive frames
-        frame_diffs = frame_values - prev_frame_values
+        frame_diffs = frame_values.astype(int) - prev_frame_values.astype(int)
         # Check for harmful flash
-        if np.mean(np.abs(frame_diffs)) > 20 and np.mean(prev_frame_values) < 160:
+        if np.mean(np.abs(frame_diffs)) > 20 and (np.mean(prev_frame_values) < 160 or np.mean(frame_values) < 160):
             flash_count += 1
             
         # Check for transition to or from saturated red
-        if np.any(np.isclose(frame_values, [255, 0, 0])) or np.any(np.isclose(prev_frame_values, [255, 0, 0])):
+        red_pixels_current_frame = np.isclose(frame_values, [255, 0, 0], atol=50)
+        if np.mean(red_pixels_current_frame) > 0.1:
             flash_count += 1
             
         # Update frame count
         frame_count += 1
         
-        # Check for sequence of flashes per second
-        if frame_count == fps:
-            if flash_count > 3:
-                risk = True
-                break
-            else:
-                # Reset flash count and frame count for the next second
-                flash_count = 0
-                frame_count = 0
+        # Check for sequence of flashes per second, if less than 8 frames apart then mark risky
+        if flash_count >= 3 and frame_count <= fps:
+            print(i, " frames in, too many flashes detected")
+            risk = True
+            break
+        elif flash_count >= 3:
+            flash_count = 0
+            frame_count = 0
         
         # Update previous frame values
         prev_frame_values = frame_values
+        i += 1
         
     return risk
 
@@ -211,7 +221,7 @@ def find_dark_and_dimmed_ranges(max_values, threshold):
         dark_and_dimmed_ranges.append((start_time, len(max_values)))  # Add the last range if it ends at the end of the video
     return dark_and_dimmed_ranges
 
-def print_range_characteristics(max_values, dark_and_dimmed_ranges):
+def print_range_characteristics(clip, max_values, dark_and_dimmed_ranges):
     """
     Print characteristics of the values in each range.
     """
@@ -232,9 +242,8 @@ def print_range_characteristics(max_values, dark_and_dimmed_ranges):
         
         # Get the exact frame values in the range using a generator to avoid creating a large temporary list
         exact_frame_values = frame_generator(clip, start, end)
-        risk_mean, risk_stddev = calculate_epilepsy_risk(exact_frame_values)
-        print(f"Epileptic risk: {risk_mean:.1f}, {risk_stddev:.1f}")
-        if risk_mean > 75 and risk_stddev > 8:
+        is_epileptic = calculate_epilepsy_risk(exact_frame_values)
+        if is_epileptic:
             print(f"Likely dimmed scene! Undimming range:  ({start}, {end}, {256 / avg_value:.2f})")
             # TODO: Instead of putting 256, put the neighboring scene maxes
             dimmed_ranges.append((start, end, 256 / avg_value))
@@ -267,7 +276,7 @@ def get_dimmed_scenes(input_file, show_plot, threshold):
         return []
     
     dark_and_dimmed_ranges = find_dark_and_dimmed_ranges(max_values, threshold)
-    dimmed_ranges = print_range_characteristics(max_values, dark_and_dimmed_ranges)
+    dimmed_ranges = print_range_characteristics(clip, max_values, dark_and_dimmed_ranges)
     return dimmed_ranges
 
 def get_dim_factor(input_file, start, end):
