@@ -181,23 +181,25 @@ def load_values(input_file, clip):
     print("Loaded max and avg values!")
     return max_values, avg_values
 
-def calculate_max_values_per_6_frames(max_values):
+def calculate_fn_per_6_frames(max_values, fn = np.max, frames = 6):
     """
-    Calculate max_values_per_6_frames from every 6 frames in max_values.
+    Calculate fn on every 6 frames in max_values.
     """
-    max_values_per_6_frames = []
-    for i in range(0, len(max_values), 6):
+    fn_over_frame_group = []
+    for i in range(0, len(max_values), frames):
         frames_to_average = max_values[i:i+6]
-        max_frame = np.max(frames_to_average, axis=0)
-        max_values_per_6_frames.append(max_frame)
-    return max_values_per_6_frames
+        max_frame = fn(frames_to_average, axis=0)
+        fn_over_frame_group.append(max_frame)
+    return fn_over_frame_group
 
-def plot_max_values(max_values_per_6_frames):
+def plot_values(max_values_per_6_frames, avg_values_per_6_frames):
     """
-    Plot the max_values_per_6_frames and show the plot.
+    Plot the max and average values and show the plot.
     """
-    plt.plot([x/4 for x in range(len(max_values_per_6_frames))], [np.max(val) for val in max_values_per_6_frames])
-    plt.title('Max frame value per quarter second')
+    plt.plot([x/4 for x in range(len(max_values_per_6_frames))], [np.max(val) for val in max_values_per_6_frames], label='Max')
+    plt.plot([x/4 for x in range(len(avg_values_per_6_frames))], [np.mean(val) for val in avg_values_per_6_frames], label='Avg')
+    plt.title('Max and avg frame value per quarter second')
+    plt.legend()
     # plt.xlim(0, len(max_values_per_6_frames)/4)  # Set x-axis range to match the number of data points in seconds
     plt.show()
 
@@ -228,31 +230,37 @@ def print_range_characteristics(clip, max_values, dark_and_dimmed_ranges):
     dimmed_ranges = []
     for start, end in dark_and_dimmed_ranges:
         range_values = max_values[int(start):int(end)]  # Get the values in the range
-        print(f"Possible dark or dimmed time range: {frame_to_time(start)} - {frame_to_time(end)} minutes")
-        avg_value = np.mean([np.max(val) for val in range_values])
-        max_value = np.max([np.max(val) for val in range_values])
-        mean_value_no_outliers = calculate_mean_without_outliers(range_values)
-        min_value = np.min([np.min(val) for val in range_values])
-        variance = np.var([np.var(val) for val in range_values])
-        print(f"Average value: {avg_value:.2f}, Max value: {max_value}, Min value: {min_value}, Mean without Outliers: {mean_value_no_outliers}, Variance: {variance:.2f}")
-        if len(range_values) > 0:
-            filtered_values = [x for x in range_values if isinstance(x, np.ndarray) and x.shape == (3,)]
-            if len(filtered_values) > 0:
-                print(f"Variance between channels: {[round(var, 2) for var in np.var(filtered_values, axis=0)]}")
-        
-        # Get the exact frame values in the range using a generator to avoid creating a large temporary list
-        exact_frame_values = frame_generator(clip, start, end)
-        is_epileptic = calculate_epilepsy_risk(exact_frame_values)
-        if is_epileptic:
-            print(f"Likely dimmed scene! Undimming range:  ({start}, {end}, {256 / avg_value:.2f})")
-            # TODO: Instead of putting 256, put the neighboring scene maxes
-            dimmed_ranges.append((start, end, 256 / avg_value))
-        else:
-            print(f"Likely NOT dimmed scene, just dark! If it was, dim range:  ({start}, {end}, {256 / avg_value:.2f})")
-            
+        result = print_single_range_characteristics(clip, start, end, range_values)
+        if result:
+            dimmed_ranges.append(result)
         print("")
         
     return dimmed_ranges
+
+def print_single_range_characteristics(clip, start, end, range_values):
+    print(f"Possible dark or dimmed time range: {frame_to_time(start)} - {frame_to_time(end)} minutes")
+    avg_value = np.mean([np.max(val) for val in range_values])
+    max_value = np.max([np.max(val) for val in range_values])
+    mean_value_no_outliers = calculate_mean_without_outliers(range_values)
+    min_value = np.min([np.min(val) for val in range_values])
+    variance = np.var([np.var(val) for val in range_values])
+    print(f"Average value: {avg_value:.2f}, Max value: {max_value}, Min value: {min_value}, Mean without Outliers: {mean_value_no_outliers}, Variance: {variance:.2f}")
+    if len(range_values) > 0:
+        filtered_values = [x for x in range_values if isinstance(x, np.ndarray) and x.shape == (3,)]
+        if len(filtered_values) > 0:
+            print(f"Variance between channels: {[round(var, 2) for var in np.var(filtered_values, axis=0)]}")
+    
+    # Get the exact frame values in the range using a generator to avoid creating a large temporary list
+    exact_frame_values = frame_generator(clip, start, end)
+    is_epileptic = calculate_epilepsy_risk(exact_frame_values)
+    if is_epileptic:
+        print(f"Likely dimmed scene! Undimming range:  ({start}, {end}, {256 / avg_value:.2f})")
+        # TODO: Instead of putting 256, put the neighboring scene maxes
+        return (start, end, 256 / avg_value)
+    else:
+        print(f"Likely NOT dimmed scene, just dark! If it was, dim range:  ({start}, {end}, {256 / avg_value:.2f})")
+        return None
+        
 
 def get_dimmed_scenes(input_file, show_plot, threshold):
     """
@@ -272,10 +280,11 @@ def get_dimmed_scenes(input_file, show_plot, threshold):
     """
     clip = VideoFileClip(input_file)
     max_values, avg_values = load_values(input_file, clip)
-    max_values_per_6_frames = calculate_max_values_per_6_frames(max_values)
+    max_values_per_6_frames = calculate_fn_per_6_frames(max_values, np.max)
+    avg_values_per_6_frames = calculate_fn_per_6_frames(avg_values, np.mean)
     
     if show_plot:
-        plot_max_values(max_values_per_6_frames)
+        plot_values(max_values_per_6_frames, avg_values_per_6_frames)
         return []
     
     dark_and_dimmed_ranges = find_dark_and_dimmed_ranges(max_values, threshold)
@@ -294,6 +303,7 @@ def get_dim_factor(input_file, start, end):
     Returns:
     float: The dim factor for the given time range.
     """
+    # TODO: Don't cache all of load_values, replace with more generator code
     clip = VideoFileClip(input_file)
     max_values, avg_values = load_values(input_file, clip)
     range_values = max_values[int(start):int(end)]  # Get the values in the range
@@ -301,6 +311,7 @@ def get_dim_factor(input_file, start, end):
     mean_value_no_outliers = calculate_mean_without_outliers(range_values)
     dim_factor = 256 / avg_value
     # Print the range characteristics to use as debugging
+    # TODO: Replace by print_single_range_characteristics
     print_range_characteristics(clip, max_values, [(int(start),int(end))])
     print("Dim factor autocalculated: ", dim_factor)
     return dim_factor
@@ -355,12 +366,25 @@ def frame_to_time(frame_num):
 def main():
     parser = argparse.ArgumentParser(description='Multiply color values in a video by a factor.')
     parser.add_argument('input_file', type=str, help='Path to the input video file')
-    parser.add_argument('output_file', type=str, help='Path to the output video file')
+    parser.add_argument('--out', type=str, nargs='?', default=None, help='Path to the output video file')
     parser.add_argument('--only_plot', action='store_true', help='Only plot max frame value for each quarter second')
     parser.add_argument('--custom_scene', nargs=3, metavar=('start', 'end', 'factor (0 to auto-calculate)'), help='Define a custom dimmed scene with start time, end time (in minutes:seconds or seconds), and optional dim factor (if 0, we will auto-calculate)')
 
     args = parser.parse_args()
+    args.output_file = args.out
+    
+    if args.output_file is not None and args.only_plot:
+        parser.error("--out will be ignored when --only_plot is set, remove output file")
 
+    if args.output_file and os.path.splitext(args.input_file)[1] != os.path.splitext(args.output_file)[1]:
+        raise ValueError("Input and output files must have the same file extension.")
+    
+    if args.output_file is None and not args.only_plot:
+        parser.print_help("--out must specificy an output file if --only_plot is not set! Will continue with tmp.mkv.")
+        args.output_file = "tmp.mkv"
+          
+    if args.output_file and os.path.splitext(args.output_file)[1] != '.mkv':
+        raise ValueError("Output file must have .mkv extension.")
 
     if(args.only_plot):
         get_dimmed_scenes(args.input_file, args.only_plot, 0)

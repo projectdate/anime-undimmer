@@ -5,7 +5,7 @@ This python script exactly removes the dim filters for a segment of an anime cli
 ## Installation
 
 I use Python 3.11.4 with pip 23.1.2. It will probably run on any Python3.
-```
+```bash
 pip install -r requirements.txt
 ```
 
@@ -13,10 +13,10 @@ pip install -r requirements.txt
 
 Note that the script right now only works on .mkv files, not .mp4 files (due to a mysterious speedup).
 
-This will fully calculate then undim the calculated ranges that are determined to be dimmed and not just dark, and print the final ranges to console along with their values, and overwrite output_episode_undimmed.mkv with the undimmed ep15:
+This will fully calculate then undim the calculated ranges that are determined to be dimmed and not just dark, and print the final ranges to console along with their values, and overwrite ep_undimmed.mkv with the undimmed version of ep_dimmed:
 
-```
-python color_multiply.py ep15_original.mkv output_episode_undimmed.mkv
+```bash
+python color_multiply.py ep_dimmed.mkv --out ep_undimmed.mkv
 ```
 
 This will generate a bash output similar to `jjk_s2_e15.log`.
@@ -26,21 +26,21 @@ This will generate a bash output similar to `jjk_s2_e15.log`.
 Note that this script is not perfect. We are still tuning the cutoffs, so it is especially liable to un-dim merely dark scenes. It's is less likely to miss dimmed scenes, although still possible.
 
 To show the brightness histogram over the whole video, run this relatively fast optional sanity check:
-```
-python color_multiply.py ep15_original.mkv output_episode_undimmed.mkv --only_plot
+```bash
+python color_multiply.py ep15_original.mkv --only_plot
 ```
 
 This will display the ranges that are likely to be dark or dimmed (the dips in the graph), and plots the max luminescence per frame. It will also cache those max values in a local .pkl to avoid expensive recalculation for any more computation on an input video of the same filename. only_plot means the script will NOT actually do any dimming computations nor write to the output file.
 
 To dim or undim a specific scene, you can call
-```
-python color_multiply.py input.mp4 output.mp4 --custom_scene 0:30 1:20
+```bash
+python color_multiply.py input.mp4 --out output.mp4 --custom_scene 0:30 1:20
 ```
 The above will define a custom dimmed scene from 30 seconds to 1 minute 20 seconds, and automatically undim it (and output the factor used).
 
 If you think a scene should be dimmed or undimmed by a specific factor, you can call
-```
-python color_multiply.py input.mp4 output.mp4 --custom_scene 0:30 1:20 1.5
+```bash
+python color_multiply.py input.mp4 --out output.mp4 --custom_scene 0:30 1:20 1.5
 ``` 
 with a dim factor of 1.5 (meaning everything in this range will get brighter by about 50%, corresponding to the average about a 33% initial reduction for dimmed scenes). You can also add dim to scenes via multiplying by numbers less than 1 i.e. `0.7` instead of `1.5` will dim the scene by 30% instead.
 
@@ -60,6 +60,8 @@ There are a couple key insights here:
 - **Speed via caching and generators**: To make it faster, we cache the calculated max values to be able to restart a closed process faster (in the .pkl). We also store generators instead of arrays for the expensive step of calculating mean and variance of each dimmed/dark scenes to figure out if they are epileptic, for it to be as efficient a computation as possible. It's still slow though, since it's Python.
 
 ## To-do
+- If there's two consecutive dimmed ranges for some scene (say, less than 2 seconds apart), also test the middle range for epilepsy and dimming (high priority, as incorrectly converted dark scenes end up with flashes in the middle so this is a band-aid)
+- If there's a massive dimmed range, it's possible that some subset of that is really epileptic and some subset is not. Use flashes to only undim scenes at least 15 frames long, with at least two flashes maybe? (medium priority, it seems higher priority is fix the above?)
 - Sometimes, dim scenes have a window in the background and briefly get undimmed mid-scene. To avoid this, if a short (say < 3 second) undimmed section between two dimmed scenes has a similar composition color-wise to the surrounding scenes, then dim it as well. This can be done via average + epileptic value being close in range (high-medium priority, as this is a common pattern if like, a bright window appears briefly in a scene).
 - Improve dim vs dark scene differentiation. One idea is to replace the cutoffs for mean and std. dev. by better linear regressions + decision trees (i.e. the higher the mean, the lower the std.dev has can be to qualify as a dimmed scene). You can use `jjk_s2_e15.log` to get those values (currently I only take into account epileptic risk). (Medium priority, as algorithmic changes might be better)
 - Use cython to speed it up (medium priority, as running speed is definitely a bottleneck)
