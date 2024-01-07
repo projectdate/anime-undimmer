@@ -52,43 +52,9 @@ def calculate_epilepsy_risk(frame_values_gen, frame_values_gen_2, range_max_valu
     Returns:
     mean, stddev: A tuple containing the mean and standard deviation of the absolute sum of differences between consecutive frames.
     """
-    # Calculation 1
-    start_time = time.time()
-    prev_frame_values = next(frame_values_gen).astype(int)
-    abs_sum_diffs_1 = np.array([], dtype='float64')
-    abs_luminescance_1 = np.array([], dtype='float64')
-    # Iterate over the generator
-    # Calculate the difference between consecutive frames
-    for frame_values in frame_values_gen:
-        # Calculate the absolute sum of pixel differences for each frame difference
-        frame_diffs = frame_values.astype(int) - prev_frame_values.astype(int)
-        abs_sum_diffs_1 = np.append(abs_sum_diffs_1, np.mean(np.abs(frame_diffs)))
-        abs_luminescance_1 = np.append(abs_luminescance_1, np.mean(prev_frame_values))
-        # Update previous frame values
-        prev_frame_values = frame_values.astype(int)
-
-    abs_luminescance_1 = np.append(abs_luminescance_1, np.mean(prev_frame_values))
-    # abs_luminescance_1.append(np.mean(prev_frame_values.astype(int)))
-    end_time = time.time()
-    print(f"Time taken by Calculation 1: {(end_time - start_time) * 1000} milliseconds")
-    # Calculation 1 end
-    
-    # Calculation 2
-    start_time = time.time()
     # Convert lists to numpy arrays
-    abs_sum_diffs_2 = range_diff_values
-    abs_luminescance_2 = np.mean(range_avg_values, axis=1)
-    end_time = time.time()
-    print(f"Time taken by Calculation 2: {(end_time - start_time) * 1000} milliseconds")
-    # Calculation 2 end
-    
-    # Assert that calc 1 and 2 have the same outputs
-    npt.assert_almost_equal(abs_luminescance_1, abs_luminescance_2, decimal=5)
-    npt.assert_almost_equal(abs_sum_diffs_1, abs_sum_diffs_2, decimal=5)
-    
-    ## TODO: If no assertion error, remove the slower one and delete the following two lines
-    abs_sum_diffs = abs_sum_diffs_1
-    abs_luminescance = abs_luminescance_1
+    abs_sum_diffs = range_diff_values
+    abs_luminescance = np.mean(range_avg_values, axis=1)
     
     frame_count = len(abs_sum_diffs)
     # Convert list to numpy array
