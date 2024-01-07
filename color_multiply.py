@@ -53,6 +53,7 @@ def calculate_epilepsy_risk(frame_values_gen, frame_values_gen_2, range_max_valu
     mean, stddev: A tuple containing the mean and standard deviation of the absolute sum of differences between consecutive frames.
     """
     # Convert lists to numpy arrays
+    print(range_diff_values)
     abs_sum_diffs = range_diff_values
     abs_luminescance = np.mean(range_avg_values, axis=1)
     
@@ -202,8 +203,8 @@ def load_values(input_file, clip):
             avg_values.append(avg_frame)
             if prev_frame is None: # To align the size of the arrays
                 prev_frame = frame
-                diff_frame = frame.astype(int) - prev_frame.astype(int)
-                diff_values.append(np.mean(np.abs(diff_frame)))
+            diff_frame = frame.astype(int) - prev_frame.astype(int)
+            diff_values.append(np.mean(np.abs(diff_frame)))
             prev_frame = frame
         print("Done calculating! Caching...")
         with open(cache_file, 'wb') as f:
