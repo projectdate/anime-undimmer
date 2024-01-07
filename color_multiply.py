@@ -157,6 +157,7 @@ def calculate_epilepsy_risk_v2(frame_values_gen):
         
     return risk
 
+# Takes the whole clip and returns a generator that yields frames from start to end
 def frame_generator(clip, start, end):
     start_frame = int(start)
     end_frame = int(end)
@@ -167,12 +168,31 @@ def frame_generator(clip, start, end):
             break
         yield frame
 
-# Calculates mean of the max luminescence of each frame
+# Calculates mean of the luminescence of each frame, removing outliers
 def calculate_mean_without_outliers(values):
     q75, q25 = np.percentile(values, [75, 25])
     iqr = q75 - q25
     threshold_values = [x for x in values if ((q25 - 1.5*iqr) <= np.max(x) <= (q75 + 1.5*iqr))]
     return np.mean([np.max(val) for val in threshold_values])
+
+def process_frame(frame, prev_frame):
+    """
+    Process a frame and calculate the maximum, average and difference values.
+
+    Parameters:
+    frame (np.array): The current frame to be processed. It's a 3D array (height, width, RGB).
+    prev_frame (np.array): The previous frame for difference calculation. It's a 3D array (height, width, RGB).
+
+    Returns:
+    tuple: A tuple containing maximum (1D array of RGB values), average (1D array of RGB values) and difference values (single float value) of the frame.
+    """
+    max_frame = np.max(frame, axis=(0, 1))
+    avg_frame = np.mean(frame, axis=(0, 1))
+    if prev_frame is None: # To align the size of the arrays
+        prev_frame = frame
+    diff_frame = frame.astype(int) - prev_frame.astype(int)
+    diff_value = np.mean(np.abs(diff_frame))
+    return max_frame, avg_frame, diff_value
 
 def load_values(input_file, clip):
     """
@@ -197,14 +217,12 @@ def load_values(input_file, clip):
         # Calculate the max, avg and diff values and store them in the cache file
         prev_frame = None
         for i, (t, frame) in tqdm.tqdm(enumerate(clip.iter_frames(with_times=True)), total=clip.duration * clip.fps, dynamic_ncols=True):
-            max_frame = np.max(frame, axis=(0, 1))
-            avg_frame = np.mean(frame, axis=(0, 1))
-            max_values.append(max_frame)
-            avg_values.append(avg_frame)
             if prev_frame is None: # To align the size of the arrays
                 prev_frame = frame
-            diff_frame = frame.astype(int) - prev_frame.astype(int)
-            diff_values.append(np.mean(np.abs(diff_frame)))
+            max_frame, avg_frame, diff_frame = process_frame(frame, prev_frame)
+            max_values.append(max_frame)
+            avg_values.append(avg_frame)
+            diff_values.append(diff_frame)
             prev_frame = frame
         print("Done calculating! Caching...")
         with open(cache_file, 'wb') as f:
