@@ -73,27 +73,26 @@ def calculate_epilepsy_risk(frame_values_gen, frame_values_gen_2, dim_multiplier
     print(f"Time taken by Calculation 1: {(end_time - start_time) * 1000} milliseconds")
     # Calculation 1 end
     
-    # # Calculation 2
-    # start_time = time.time()
+    # Calculation 2
+    start_time = time.time()
+    prev_frame_values = next(frame_values_gen).astype(np.int8)
+    abs_sum_diffs_2 = np.array([], dtype='float64')
+    abs_luminescance_2 = np.array([], dtype='float64')
+    # Iterate over the generator
+    # Calculate the difference between consecutive frames
+    for frame_values in frame_values_gen:
+        # Calculate the absolute sum of pixel differences for each frame difference
+        frame_diffs = frame_values.astype(int) - prev_frame_values.astype(int)
+        abs_sum_diffs_2 = np.append(abs_sum_diffs_2, np.mean(np.abs(frame_diffs)))
+        abs_luminescance_2 = np.append(abs_luminescance_2, np.mean(prev_frame_values))
 
-    # chunk_size = 20  # adjust this value based on your available memory
-    # chunks = []
-    # abs_sum_diffs_2 = []
-    # abs_luminescance_2 = []
-
-    # for i, chunk in enumerate(chunked(frame_values_gen_2, chunk_size)):  # replace `chunked` with your chunking function
-    #     frame_values = np.array(chunk).astype(int)
-    #     frame_diffs = np.abs(np.diff(frame_values, axis=0))
-    #     abs_sum_diffs_chunk = np.mean(frame_diffs, axis=(1, 2, 3))
-    #     abs_luminescance_chunk = np.mean(frame_values[1:] if i > 0 else frame_values, axis=(1, 2, 3))
-    #     abs_sum_diffs_2 = np.append(abs_sum_diffs_2, abs_sum_diffs_chunk)
-    #     abs_luminescance_2 = np.append(abs_luminescance_2, abs_luminescance_chunk)
-    # # chunks.append((abs_sum_diffs_chunk, abs_luminescance_chunk))
-    # # abs_sum_diffs_2, abs_luminescance_2 = map(np.concatenate, zip(*chunks))
-
-    # end_time = time.time()
-    # print(f"Time taken by Calculation 2: {(end_time - start_time) * 1000} milliseconds")
-    # # Calculation 2 end
+    abs_luminescance_2 = np.append(abs_luminescance_2, np.mean(prev_frame_values))
+    # abs_luminescance_2.append(np.mean(prev_frame_values.astype(int)))
+    # Update previous frame values
+    prev_frame_values = frame_values.astype(int)
+    end_time = time.time()
+    print(f"Time taken by Calculation 2: {(end_time - start_time) * 1000} milliseconds")
+    # Calculation 2 end
     
     # Assert that calc 1 and 2 have the same outputs
     npt.assert_almost_equal(abs_sum_diffs_1, abs_sum_diffs_2, decimal=5)
