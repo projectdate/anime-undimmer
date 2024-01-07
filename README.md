@@ -70,7 +70,7 @@ There are a couple key insights here:
 - If a detected dimmed frame is a sub-part of a generally dark broader scene (i.e. maybe similar mean luminances, or with the same palette), like 16:55.17 - 16:55.79 in JJK S02E15, then treat it as dark instead. (low priority and on the harder side, as flashing seems to be a better criteria to optimize)
 - Instead of putting 256 as the numerator by which to calculate the dimming factor for each dim range, put the neighboring scene maxes. Low priority (it usually will be 256) but easier.
 
-We welcome any contributions, comments, or collaborations!
+We welcome any contributions, comments, or collaborations! Especially additions to `notes.txt` with scenes that were poorly dimmer or undimmed by this script. For badly dimmed scenes, I'd appreciate uploads with the full output of the script, so I can debug the values that were used, as well as a link to the episode if possible!
 
 ## Resources
 
