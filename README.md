@@ -69,3 +69,29 @@ There are a couple key insights here:
 - Instead of putting 256 as the numerator by which to calculate the dimming factor for each dim range, put the neighboring scene maxes. Low priority (it usually will be 256) but easier.
 
 We welcome any contributions, comments, or collaborations!
+
+## Resources
+
+To understand seizure dimming in anime, try looking at:
+
+These repos:
+- https://github.com/Falach/epileptic_activity
+- https://github.com/user234683/seizure-flash-blocker
+- https://github.com/w3c/wcag/issues/553
+
+These guidelines:
+- https://www.w3.org/TR/UNDERSTANDING-WCAG20/seizure.html
+- https://www.w3.org/WAI/WCAG22/Understanding/three-flashes
+- ANIMATED PROGRAM IMAGE EFFECT PRODUCTION GUIDELINES: https://www.tv-tokyo.co.jp/kouhou/guideenglish.htm
+- Guidance for the reduction of photosensitive epileptic seizures caused by television: https://www.itu.int/dms_pubrec/itu-r/rec/bt/R-REC-BT.1702-0-200502-I!!PDF-E.pdf
+- Harding test: https://en.wikipedia.org/wiki/Harding_test (The only implementation online is this closed source, paid program which is probably trivial to rewrite: https://hardingtest.com/)
+- Photosensitive Epilepsy Analysis Tool (PEAT): https://trace.umd.edu/peat/
+
+These tutorials:
+- https://www.useragentman.com/blog/2020/07/19/how-to-fix-seizure-inducing-sequences-in-videos/
+
+These papers:
+- Automatic detection of flashing content: https://sci-hub.se/https://ieeexplore.ieee.org/document/7148104
+- Japanese research trends toward biomedical assessment of digital contents: https://sci-hub.se/https://www.worldscientific.com/doi/epdf/10.1142/9781860948800_0094
+- FLIKCER - Chrome Extension to Resolve Online Epileptogenic Visual Content with Real-Time Luminance Frequency Analysis: https://arxiv.org/pdf/2108.09491.pdf
+- Photic- and Pattern-induced Seizures: Expert Consensus of the Epilepsy Foundation of America Working Group: https://www.epilepsy.com/sites/default/files/atoms/files/Epilepsia%20vol%2046%20issue%209%20Photosensitivity.pdf

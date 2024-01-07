@@ -181,7 +181,7 @@ def load_values(input_file, clip):
     print("Loaded max and avg values!")
     return max_values, avg_values
 
-def calculate_fn_per_6_frames(max_values, fn = np.max, frames = 6):
+def calculate_fn_per_frame_group(max_values, fn = np.max, frames = 6):
     """
     Calculate fn on every 6 frames in max_values.
     """
@@ -192,12 +192,12 @@ def calculate_fn_per_6_frames(max_values, fn = np.max, frames = 6):
         fn_over_frame_group.append(max_frame)
     return fn_over_frame_group
 
-def plot_values(max_values_per_6_frames, avg_values_per_6_frames):
+def plot_values(max_values_per_6_frames, avg_values_per_6_frames, group_size = 6):
     """
-    Plot the max and average values and show the plot.
+    Plot the max and average values (over each 6 frames, set by group_size) and show the plot.
     """
-    plt.plot([x/4 for x in range(len(max_values_per_6_frames))], [np.max(val) for val in max_values_per_6_frames], label='Max')
-    plt.plot([x/4 for x in range(len(avg_values_per_6_frames))], [np.mean(val) for val in avg_values_per_6_frames], label='Avg')
+    plt.plot([x * group_size / 24 for x in range(len(max_values_per_6_frames))], [np.max(val) for val in max_values_per_6_frames], label='Max')
+    plt.plot([x * group_size / 24 for x in range(len(avg_values_per_6_frames))], [np.mean(val) for val in avg_values_per_6_frames], label='Avg')
     plt.title('Max and avg frame value per quarter second')
     plt.legend()
     # plt.xlim(0, len(max_values_per_6_frames)/4)  # Set x-axis range to match the number of data points in seconds
@@ -233,7 +233,7 @@ def print_range_characteristics(clip, max_values, dark_and_dimmed_ranges):
         result = print_single_range_characteristics(clip, start, end, range_values)
         if result:
             dimmed_ranges.append(result)
-        print("")
+        print("") # Newline
         
     return dimmed_ranges
 
@@ -280,8 +280,8 @@ def get_dimmed_scenes(input_file, show_plot, threshold):
     """
     clip = VideoFileClip(input_file)
     max_values, avg_values = load_values(input_file, clip)
-    max_values_per_6_frames = calculate_fn_per_6_frames(max_values, np.max)
-    avg_values_per_6_frames = calculate_fn_per_6_frames(avg_values, np.mean)
+    max_values_per_6_frames = calculate_fn_per_frame_group(max_values, np.max, 6)
+    avg_values_per_6_frames = calculate_fn_per_frame_group(avg_values, np.mean, 6)
     
     if show_plot:
         plot_values(max_values_per_6_frames, avg_values_per_6_frames)
@@ -337,7 +337,7 @@ def get_all_dimmed_scenes(input_file, show_plot):
     dimmed_scenes = []
     thresholds.sort() # This is neccessary due to the way we apply most aggressive filters first
     for threshold in thresholds:
-        print("---------CALCULATING FOR THRESHOLD {threshold}----------------")
+        print(f"---------CALCULATING FOR DIM PERCENT >= {((256 - threshold) / 256):.2f}----------------")
         dimmed_scenes.extend(get_dimmed_scenes(input_file, show_plot, threshold))
     return dimmed_scenes
 

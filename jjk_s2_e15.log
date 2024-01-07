@@ -98,8 +98,7 @@ Variance between channels: [0.13081066 0.66709184 0.28174603]
 Epileptic risk: 16.1, 7.4
 
 Possible dark or dimmed time range: 18:37.54 - 18:40.50 minutes
-Average value: 1.0 Max value: 1, Min value: 0, 75th Percentile: 1, Variance: 3.033
-
+Average value: 1.0, Max value: 1, Min value: 0, 75th Percentile: 1, Variance: 3.033
 Variance between channels: [0. 0. 0.]
 Epileptic risk: 0.0, 0.0
 
