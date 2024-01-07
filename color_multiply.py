@@ -270,6 +270,11 @@ def find_dark_and_dimmed_ranges_fast(max_values, threshold):
     diff = np.diff(below_threshold.astype(int))
     starts = np.where(diff == 1)[0] + 1
     ends = np.where(diff == -1)[0] + 1
+    
+    # It's possible that there's an end before the first start
+    if len(ends) > len(starts):
+        starts = np.insert(starts, 0, 0)
+        
     ranges = np.c_[starts, ends]
     ranges = ranges[ranges[:, 1] - ranges[:, 0] >= 15]
     end_time = time.time()
@@ -457,7 +462,7 @@ def main():
             dimmed_scenes = get_all_dimmed_scenes(args.input_file, args.only_plot)
             
         # Convert frame numbers to timestamps just for printing
-        dimmed_scenes_timestamps = [(frame_to_time(start), frame_to_time(end), factor) for start, end, factor in dimmed_scenes]
+        dimmed_scenes_timestamps = [(frame_to_time(start), frame_to_time(end), "{:.2f}".format(factor)) for start, end, factor in dimmed_scenes]
         print("Dimmed scenes (start time, stop time, dim factor): ", dimmed_scenes_timestamps)
         
         process_video(args.input_file, args.output_file, dimmed_scenes)

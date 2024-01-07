@@ -1,6 +1,6 @@
 # Anime Undimmer
 
-This python script exactly removes the dim filters for a segment of an anime clip. For an n minute episode, it takes approximately 3n minutes to run this script.
+This python script exactly removes the dim filters for a segment of an anime clip. For an n minute episode, it takes approximately n minutes to run this script (and about n/4 minutes for every subsequent run of the same video file).
 
 ## Installation
 
@@ -61,7 +61,7 @@ There are a couple key insights here:
 
 ## To-do
 - If there's two consecutive dimmed ranges for some scene (say, less than 2 seconds apart), also test the middle range for epilepsy and dimming (high priority, as incorrectly converted dark scenes end up with flashes in the middle so this is a band-aid)
-- Rerun the regression with flashes and epileptic parameters on the ground truth to get the results (high priority, as this will likely fully solve the dark vs dim problem)
+- Rerun the regression with flashes and epileptic parameters on the ground truth to get the results (medium priority, as this will likely fully solve the dark vs dim problem. normally would be high but rn it's sorta mostly solved tho)
 - If there's a massive dimmed range, it's possible that some subset of that is really epileptic and some subset is not. Use flashes to only undim scenes at least 15 frames long, with at least two flashes maybe? (medium priority, it seems higher priority is fix the above?)
 - Sometimes, dim scenes have a window in the background and briefly get undimmed mid-scene. To avoid this, if a short (say < 3 second) undimmed section between two dimmed scenes has a similar composition color-wise to the surrounding scenes, then dim it as well. This can be done via average + epileptic value being close in range (high-medium priority, as this is a common pattern if like, a bright window appears briefly in a scene).
 - Improve dim vs dark scene differentiation. One idea is to replace the cutoffs for mean and std. dev. by better linear regressions + decision trees (i.e. the higher the mean, the lower the std.dev has can be to qualify as a dimmed scene). You can use `jjk_s2_e15.log` to get those values (currently I only take into account epileptic risk). (Medium priority, as algorithmic changes might be better)
