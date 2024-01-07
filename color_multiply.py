@@ -6,7 +6,7 @@ import os
 import pickle
 import time
 import numpy.testing as npt
-
+import tqdm
 
 def multiply_colors(frame, dimmed_scenes, current_frame):
     """
@@ -39,7 +39,7 @@ def chunked(generator, chunk_size):
     if chunk:
         yield chunk
         
-def calculate_epilepsy_risk(frame_values_gen, frame_values_gen_2, dim_multiplier):
+def calculate_epilepsy_risk(frame_values_gen, frame_values_gen_2, range_max_values, range_avg_values, range_diff_values, dim_multiplier):
     """
     Calculate the risk of epilepsy for a video.
 
@@ -64,39 +64,27 @@ def calculate_epilepsy_risk(frame_values_gen, frame_values_gen_2, dim_multiplier
         frame_diffs = frame_values.astype(int) - prev_frame_values.astype(int)
         abs_sum_diffs_1 = np.append(abs_sum_diffs_1, np.mean(np.abs(frame_diffs)))
         abs_luminescance_1 = np.append(abs_luminescance_1, np.mean(prev_frame_values))
+        # Update previous frame values
+        prev_frame_values = frame_values.astype(int)
 
     abs_luminescance_1 = np.append(abs_luminescance_1, np.mean(prev_frame_values))
     # abs_luminescance_1.append(np.mean(prev_frame_values.astype(int)))
-    # Update previous frame values
-    prev_frame_values = frame_values.astype(int)
     end_time = time.time()
     print(f"Time taken by Calculation 1: {(end_time - start_time) * 1000} milliseconds")
     # Calculation 1 end
     
     # Calculation 2
     start_time = time.time()
-    prev_frame_values = next(frame_values_gen).astype(np.int8)
-    abs_sum_diffs_2 = np.array([], dtype='float64')
-    abs_luminescance_2 = np.array([], dtype='float64')
-    # Iterate over the generator
-    # Calculate the difference between consecutive frames
-    for frame_values in frame_values_gen:
-        # Calculate the absolute sum of pixel differences for each frame difference
-        frame_diffs = frame_values.astype(int) - prev_frame_values.astype(int)
-        abs_sum_diffs_2 = np.append(abs_sum_diffs_2, np.mean(np.abs(frame_diffs)))
-        abs_luminescance_2 = np.append(abs_luminescance_2, np.mean(prev_frame_values))
-
-    abs_luminescance_2 = np.append(abs_luminescance_2, np.mean(prev_frame_values))
-    # abs_luminescance_2.append(np.mean(prev_frame_values.astype(int)))
-    # Update previous frame values
-    prev_frame_values = frame_values.astype(int)
+    # Convert lists to numpy arrays
+    abs_sum_diffs_2 = range_diff_values
+    abs_luminescance_2 = np.mean(range_avg_values, axis=1)
     end_time = time.time()
     print(f"Time taken by Calculation 2: {(end_time - start_time) * 1000} milliseconds")
     # Calculation 2 end
     
     # Assert that calc 1 and 2 have the same outputs
-    npt.assert_almost_equal(abs_sum_diffs_1, abs_sum_diffs_2, decimal=5)
     npt.assert_almost_equal(abs_luminescance_1, abs_luminescance_2, decimal=5)
+    npt.assert_almost_equal(abs_sum_diffs_1, abs_sum_diffs_2, decimal=5)
     
     ## TODO: If no assertion error, remove the slower one and delete the following two lines
     abs_sum_diffs = abs_sum_diffs_1
@@ -221,34 +209,43 @@ def calculate_mean_without_outliers(values):
 
 def load_values(input_file, clip):
     """
-    Load the max and avg values from the cache file if it exists, otherwise calculate them and store them in the cache file.
+    Load the max, avg values and diff between each pair of consecutive scenes from the cache file if it exists, otherwise calculate them and store them in the cache file.
     """
     print("Starting analysis...")
     max_values = []
     avg_values = []
+    diff_values = []
     
     # Define the cache file path
-    cache_file = f"{input_file}_max_and_avg_values.pkl"
+    cache_file = f"{input_file}_max_avg_and_diff_values.pkl"
     
     # Check if the cache file exists
     if os.path.exists(cache_file):
         print("Cached!")
-        # Load the max and avg values from the cache file
+        # Load the max, avg and diff values from the cache file
         with open(cache_file, 'rb') as f:
-            max_values, avg_values = pickle.load(f)
+            max_values, avg_values, diff_values = pickle.load(f)
     else:
-        print("Not cached!")
-        # Calculate the max and avg values and store them in the cache file
-        for i, (t, frame) in enumerate(clip.iter_frames(with_times=True)):
+        print("Not cached! Calculating params now...")
+        # Calculate the max, avg and diff values and store them in the cache file
+        prev_frame = None
+        for i, (t, frame) in tqdm.tqdm(enumerate(clip.iter_frames(with_times=True)), total=clip.duration * clip.fps, dynamic_ncols=True):
             max_frame = np.max(frame, axis=(0, 1))
             avg_frame = np.mean(frame, axis=(0, 1))
             max_values.append(max_frame)
             avg_values.append(avg_frame)
+            if prev_frame is None: # To align the size of the arrays
+                prev_frame = frame
+                diff_frame = frame.astype(int) - prev_frame.astype(int)
+                diff_values.append(np.mean(np.abs(diff_frame)))
+            prev_frame = frame
+        print("Done calculating! Caching...")
         with open(cache_file, 'wb') as f:
-            pickle.dump((max_values, avg_values), f)
+            pickle.dump((max_values, avg_values, diff_values), f)
+        print(f"Cached! Delete {cache_file} to clear it.")
     
-    print("Loaded max and avg values!")
-    return max_values, avg_values
+    print("Loaded max, avg and diff values!")
+    return max_values, avg_values, diff_values
 
 def calculate_fn_per_frame_group(max_values, fn = np.max, frames = 6):
     """
@@ -313,37 +310,39 @@ def find_dark_and_dimmed_ranges_fast(max_values, threshold):
     print(f"Time taken by find_dark_and_dimmed_ranges (numpy optimized): {(end_time - start_time) * 1000} milliseconds")
     return ranges
 
-def print_range_characteristics(clip, max_values, dark_and_dimmed_ranges):
+def filter_and_print_range_characteristics(clip, max_values, avg_values, diff_values, dark_and_dimmed_ranges):
     """
     Print characteristics of the values in each range.
     """
     dimmed_ranges = []
     for start, end in dark_and_dimmed_ranges:
-        range_values = max_values[int(start):int(end)]  # Get the values in the range
-        result = print_single_range_characteristics(clip, start, end, range_values)
+        range_max_values = max_values[int(start):int(end)]  # Get the values in the range
+        range_avg_values = avg_values[int(start):int(end)]  # Get the values in the range
+        range_diff_values = diff_values[int(start+1):int(end)]  # Get the values in the range
+        result = get_and_print_single_range_characteristics(clip, start, end, range_max_values, range_avg_values, range_diff_values)
         if result:
             dimmed_ranges.append(result)
         print("") # Newline
         
     return dimmed_ranges
 
-def print_single_range_characteristics(clip, start, end, range_values):
+def get_and_print_single_range_characteristics(clip, start, end, range_max_values, range_avg_values, range_diff_values):
     print(f"Possible dark or dimmed time range: {frame_to_time(start)} - {frame_to_time(end)} minutes")
-    avg_value = np.mean([np.max(val) for val in range_values])
-    max_value = np.max([np.max(val) for val in range_values])
-    mean_value_no_outliers = calculate_mean_without_outliers(range_values)
-    min_value = np.min([np.min(val) for val in range_values])
-    variance = np.var([np.var(val) for val in range_values])
+    avg_value = np.mean([np.max(val) for val in range_max_values])
+    max_value = np.max([np.max(val) for val in range_max_values])
+    mean_value_no_outliers = calculate_mean_without_outliers(range_max_values)
+    min_value = np.min([np.min(val) for val in range_max_values])
+    variance = np.var([np.var(val) for val in range_max_values])
     print(f"Average value: {avg_value:.2f}, Max value: {max_value}, Min value: {min_value}, Mean without Outliers: {mean_value_no_outliers}, Variance: {variance:.2f}")
-    if len(range_values) > 0:
-        filtered_values = [x for x in range_values if isinstance(x, np.ndarray) and x.shape == (3,)]
+    if len(range_max_values) > 0:
+        filtered_values = [x for x in range_max_values if isinstance(x, np.ndarray) and x.shape == (3,)]
         if len(filtered_values) > 0:
             print(f"Variance between channels: {[round(var, 2) for var in np.var(filtered_values, axis=0)]}")
     
     # Get the exact frame values in the range using a generator to avoid creating a large temporary list
     exact_frame_values = frame_generator(clip, start, end)
     exact_frame_values_2 = frame_generator(clip, start, end)
-    is_epileptic = calculate_epilepsy_risk(exact_frame_values, exact_frame_values_2, 256 / avg_value)
+    is_epileptic = calculate_epilepsy_risk(exact_frame_values, exact_frame_values_2, range_max_values, range_avg_values, range_diff_values, 256 / avg_value)
     if is_epileptic:
         print(f"Likely dimmed scene! Undimming range:  ({start}, {end}, {256 / avg_value:.2f})")
         # TODO: Instead of putting 256, put the neighboring scene maxes
@@ -370,7 +369,7 @@ def get_dimmed_scenes(input_file, show_plot, threshold):
     list: A list of time ranges (start frame, end frame, factor) representing the dimmed scenes in the video and how much to undim them by, if show_plot is False. An empty list if show_plot is True.
     """
     clip = VideoFileClip(input_file)
-    max_values, avg_values = load_values(input_file, clip)
+    max_values, avg_values, diff_values = load_values(input_file, clip)
     max_values_per_6_frames = calculate_fn_per_frame_group(max_values, np.max, 6)
     avg_values_per_6_frames = calculate_fn_per_frame_group(avg_values, np.mean, 6)
     
@@ -380,10 +379,9 @@ def get_dimmed_scenes(input_file, show_plot, threshold):
     
     dark_and_dimmed_ranges = find_dark_and_dimmed_ranges(max_values, threshold)
     dark_and_dimmed_ranges_fast = find_dark_and_dimmed_ranges_fast(max_values, threshold)
-    
     # TODO: If this line is never printed then replace one with the other
     assert np.all(dark_and_dimmed_ranges == dark_and_dimmed_ranges_fast), "Mismatch between fast and slow methods of finding dark and dimmed ranges"
-    dimmed_ranges = print_range_characteristics(clip, max_values, dark_and_dimmed_ranges)
+    dimmed_ranges = filter_and_print_range_characteristics(clip, max_values, avg_values, diff_values, dark_and_dimmed_ranges)
     return dimmed_ranges
 
 def get_dim_factor(input_file, start, end):
@@ -400,14 +398,14 @@ def get_dim_factor(input_file, start, end):
     """
     # TODO: Don't cache all of load_values, replace with more generator code
     clip = VideoFileClip(input_file)
-    max_values, avg_values = load_values(input_file, clip)
+    max_values, avg_values, diff_values = load_values(input_file, clip)
     range_values = max_values[int(start):int(end)]  # Get the values in the range
     avg_value = np.mean([np.max(val) for val in range_values])
     mean_value_no_outliers = calculate_mean_without_outliers(range_values)
     dim_factor = 256 / avg_value
     # Print the range characteristics to use as debugging
-    # TODO: Replace by print_single_range_characteristics
-    print_range_characteristics(clip, max_values, [(int(start),int(end))])
+    # TODO: Replace by get_and_print_single_range_characteristics
+    filter_and_print_range_characteristics(clip, max_values, avg_values, diff_values, [(int(start),int(end))])
     print("Dim factor autocalculated: ", dim_factor)
     return dim_factor
 
