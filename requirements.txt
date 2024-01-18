@@ -3,3 +3,5 @@ moviepy
 numpy
 matplotlib
 tqdm
+joblib
+psutil

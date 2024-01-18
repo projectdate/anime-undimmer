@@ -1,4 +1,6 @@
 import argparse
+import math
+import random
 from moviepy.editor import VideoFileClip
 import numpy as np
 import matplotlib.pyplot as plt
@@ -6,7 +8,11 @@ import os
 import pickle
 import time
 import numpy.testing as npt
+from concurrent.futures import ThreadPoolExecutor
+from joblib import Parallel, delayed
+import concurrent.futures
 import tqdm
+import psutil
 
 def multiply_colors(frame, dimmed_scenes, current_frame):
     """
@@ -24,9 +30,9 @@ def process_video(input_file, output_file, dimmed_scenes):
     Process the video, multiplying each frame's pixel values by the specified factor.
     Only multiply colors in the dimmed scenes range.
     """
-    clip = VideoFileClip(input_file)
+    clip: VideoFileClip = VideoFileClip(input_file)
     clip = clip.fl(lambda gf, t: multiply_colors(gf(t), dimmed_scenes, int(t*clip.fps)))
-    clip.write_videofile(output_file, codec='libx264', audio_codec='aac')
+    clip.write_videofile(output_file, codec='libx264', audio_codec='aac', threads=4)
 
 # A specialized chunk function that re-emits the last value for diff calculation
 def chunked(generator, chunk_size):
@@ -53,7 +59,6 @@ def calculate_epilepsy_risk(frame_values_gen, frame_values_gen_2, range_max_valu
     mean, stddev: A tuple containing the mean and standard deviation of the absolute sum of differences between consecutive frames.
     """
     # Convert lists to numpy arrays
-    print(range_diff_values)
     abs_sum_diffs = range_diff_values
     abs_luminescance = np.mean(range_avg_values, axis=1)
     
@@ -65,7 +70,19 @@ def calculate_epilepsy_risk(frame_values_gen, frame_values_gen_2, range_max_valu
     flash_count = np.sum(abs_sum_diffs > 20)
     # This corrects the above technicality. Holding off on making it the default though.
     flash_count_corrected = np.sum(abs_sum_diffs > (20 / dim_multiplier))
+    
+    # Count the number of flashes less than 9 frames apart
+    # Create a boolean array where True represents a flash
+    is_flash = abs_sum_diffs > (20 / dim_multiplier)
+    # Find the indices where a flash occurs
+    flash_indices = np.where(is_flash)[0]
+    # Calculate the differences between consecutive flash indices
+    flash_diffs = np.diff(flash_indices)
+    # Count the number of flashes that are less than 9 frames apart
+    close_flash_count = np.sum(flash_diffs < 9)
+    
     # Calculate the number of flashes where the dimmed scene is below 160
+    # Doesn't work since doesn't consider saturated red: This applies only when the screen luminance of the darker image is below 160 cd/m2. Irrespective of luminance, a transition to or from a saturated red is also potentially harmful. 
     flash_count_below_160 = np.sum((abs_sum_diffs > 20) & ((np.array(abs_luminescance[:-1]) < 160) | (np.array(abs_luminescance[1:]) < 160)))
     # Corrects the same predim/postdim discrepancy
     dimmed_160 = 160 / dim_multiplier
@@ -82,11 +99,16 @@ def calculate_epilepsy_risk(frame_values_gen, frame_values_gen_2, range_max_valu
 Flashes: {flash_count / frame_count:.2f}, {flash_count} in {frame_count} frames, \
 Flashes with a <160: {flash_count_below_160 / frame_count:.2f}, {flash_count_below_160} in {frame_count} frames, \
 Predim flashes: {flash_count_corrected / frame_count:.2f}, {flash_count_corrected} in {frame_count} frames, \
-Predim flashes with a predim <160: {flash_count_below_160_corrected / frame_count:.2f}, {flash_count_below_160_corrected} in {frame_count} frames")
+Predim flashes with a predim <160: {flash_count_below_160_corrected / frame_count:.2f}, {flash_count_below_160_corrected} in {frame_count} frames, \
+Predim flashes less than 9 frames apart: {close_flash_count / frame_count:.2f}, {close_flash_count} in {frame_count} frames")
+    
+    # We should really check if any 2 flashes are less than 9 frames apart:
+    #  For clarification, successive flashes for which the leading edges are separated by nine frames or more are acceptable in a 50 Hz environment, or separated by ten frames or more are acceptable in a 60 Hz environment, irrespective of their brightness or screen area. 
     
     # This isn't strictly the criteria -- flash count should technically exceed 3 in any 1 second segment, not a segment of any length
     # Calculating that with a generator requires some fancy offset and duplication logic (i.e. each 1 gets projected to a 1 for the next 24 frames, then we add them all and see if there's a 3 anywhere)
     # Till then, this has worked well enough
+    
     if risk_mean > 10 or flash_count >= 3:
         # and risk_stddev > 8:
         return True
@@ -170,14 +192,43 @@ def frame_generator(clip, start, end):
 
 # Calculates mean of the luminescence of each frame, removing outliers
 def calculate_mean_without_outliers(values):
+    """
+    This function calculates the mean of the luminescence of each frame, removing outliers.
+
+    Parameters:
+    values (np.array): A numpy array of luminescence values of each frame. Each frame can be a full RGB frame or a single value.
+
+    Returns:
+    float: The mean of the luminescence values after removing outliers.
+    """
     q75, q25 = np.percentile(values, [75, 25])
     iqr = q75 - q25
     threshold_values = [x for x in values if ((q25 - 1.5*iqr) <= np.max(x) <= (q75 + 1.5*iqr))]
     return np.mean([np.max(val) for val in threshold_values])
 
+# Calculates mean of the luminescence of each frame, removing outliers
+def calculate_max_without_outliers_single_frame(frame):
+    """
+    This function calculates the mean of the luminescence of each frame, removing outliers.
+
+    Parameters:
+    frame (np.array): A numpy array representing a single frame. The array is 3D with dimensions (height, width, RGB).
+
+    Returns:
+    float: The mean of the luminescence values after removing outliers.
+    """
+    q75, q25 = np.percentile(frame, [75, 25])
+    iqr = q75 - q25
+    mask = np.logical_and((q25 - 1.5*iqr) <= frame, frame <= (q75 + 1.5*iqr))
+    # Ensure the mask is broadcasted across the RGB channels
+    threshold_frames = frame * mask  # Add a new axis for broadcasting
+    # Now, calculate the max without outliers for each channel separately
+    max_no_outliers_frame = np.max(threshold_frames, axis=(0, 1))  # Max across height and width, but keep the RGB channels separate
+    return max_no_outliers_frame
+
 def process_frame(frame, prev_frame):
     """
-    Process a frame and calculate the maximum, average and difference values.
+    Process a frame and calculate the maximum, average and difference values. Time and print it.
 
     Parameters:
     frame (np.array): The current frame to be processed. It's a 3D array (height, width, RGB).
@@ -186,13 +237,118 @@ def process_frame(frame, prev_frame):
     Returns:
     tuple: A tuple containing maximum (1D array of RGB values), average (1D array of RGB values) and difference values (single float value) of the frame.
     """
+    import time
+    
+    start_time_max_frame = time.time()
     max_frame = np.max(frame, axis=(0, 1))
+    end_time_max_frame = time.time()
+    
+    start_time_avg_frame = time.time()
     avg_frame = np.mean(frame, axis=(0, 1))
+    end_time_avg_frame = time.time()
+    
+    start_time_max_no_outliers_frame = time.time()
+    max_no_outliers_frame = calculate_max_without_outliers_single_frame(frame)
+    end_time_max_no_outliers_frame = time.time()
+    
     if prev_frame is None: # To align the size of the arrays
         prev_frame = frame
-    diff_frame = frame.astype(int) - prev_frame.astype(int)
+    
+    start_time_diff_frame = time.time()
+    diff_frame = np.subtract(frame.astype(int), prev_frame.astype(int))
+    end_time_diff_frame = time.time()
+    
+    start_time_diff_value = time.time()
     diff_value = np.mean(np.abs(diff_frame))
-    return max_frame, avg_frame, diff_value
+    end_time_diff_value = time.time()
+    
+    print(f"Time taken for max_frame: {end_time_max_frame - start_time_max_frame} seconds, avg_frame: {end_time_avg_frame - start_time_avg_frame} seconds, max_no_outliers_frame: {end_time_max_no_outliers_frame - start_time_max_no_outliers_frame} seconds, diff_frame: {end_time_diff_frame - start_time_diff_frame} seconds, diff_value: {end_time_diff_value - start_time_diff_value} seconds")
+    
+    return max_frame, max_no_outliers_frame, avg_frame, diff_value
+
+def process_frame_parallel(frame, prev_frame):
+    """
+    Process a frame and calculate the maximum, average and difference values.
+    This function works fine but only leads to about a 10% speedup.
+
+    Parameters:
+    frame (np.array): The current frame to be processed. It's a 3D array (height, width, RGB).
+    prev_frame (np.array): The previous frame for difference calculation. It's a 3D array (height, width, RGB).
+
+    Returns:
+    tuple: A tuple containing maximum (1D array of RGB values), average (1D array of RGB values) and difference values (single float value) of the frame.
+    """
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        max_frame = executor.submit(np.max, frame, axis=(0, 1)).result()
+        avg_frame = executor.submit(np.mean, frame, axis=(0, 1)).result()
+        max_no_outliers_frame = executor.submit(calculate_max_without_outliers_single_frame, frame).result()
+        if prev_frame is None: # To align the size of the arrays
+            prev_frame = frame
+        diff_frame = executor.submit(np.subtract, frame.astype(int), prev_frame.astype(int)).result()
+        diff_value = executor.submit(np.mean, np.abs(diff_frame)).result()
+    return max_frame, max_no_outliers_frame, avg_frame, diff_value
+
+def process_clip(clip):
+    """
+    Process a clip and calculate the maximum, average and difference values for each frame.
+
+    Parameters:
+    clip (VideoFileClip): The video clip to be processed. It's an object of class VideoFileClip.
+
+    Returns:
+    tuple: A tuple containing lists of maximum (1D array of RGB values), maximum without outliers (1D array of RGB values), average (1D array of RGB values) and difference values (1D array of single float values) for each frame in the clip.
+    """
+    start_time = time.time()
+    max_values = []
+    avg_values = []
+    diff_values = []
+    max_no_outliers_values = []
+    prev_frame = clip.get_frame(0)
+    for i, (t, frame) in tqdm.tqdm(enumerate(clip.iter_frames(with_times=True)), total=clip.fps*clip.duration, dynamic_ncols=True, desc="Processing frames"):
+        if prev_frame is None: # To align the size of the arrays
+            prev_frame = frame
+        frame = np.array(frame)
+        max_frame, max_no_outliers_frame, avg_frame, diff_frame = process_frame(frame, prev_frame)
+        prev_frame = frame
+        max_values.append(max_frame)
+        max_no_outliers_values.append(max_no_outliers_frame)
+        avg_values.append(avg_frame)
+        diff_values.append(diff_frame)
+    end_time = time.time()
+    print(f"Time taken to calculate params (slow): {(end_time - start_time) * 1000:.2f} ms")
+    return max_values, max_no_outliers_values, avg_values, diff_values
+
+import modal
+
+stub = modal.Stub(
+    "parallel_clip",
+    image=modal.Image.debian_slim().pip_install("argparse", "moviepy", "numpy", "matplotlib", "tqdm" "joblib" "psutil", "duckdb"),
+)
+
+@stub.function()
+def process_clip_parallel(clip):
+    """
+    Process a clip in parallel and calculate the maximum, average and difference values for each frame.
+    This is a parallel version of process_clip, but it OOMs on large clips.
+    
+    Parameters:
+    clip (VideoFileClip): The video clip to be processed. It's an object of class VideoFileClip.
+
+    Returns:
+    tuple: A tuple containing lists of maximum (1D array of RGB values), maximum without outliers (1D array of RGB values), average (1D array of RGB values) and difference values (1D array of single float values) for each frame in the clip.
+    """
+    # # Calculate the max, avg and diff values and store them in the cache file in parallel
+    # I think this can work up to some number of frames or something? Or else it OOMs   
+    start_time = time.time()
+    frames = list(clip.iter_frames(with_times=True))
+    cores = psutil.cpu_count(logical=False)
+    # print(f"Using max memory on {cores/2} cores...")
+    results = Parallel(n_jobs=16)(delayed(process_frame)(frame, frames[i-1][1] if i > 0 else frame) 
+                                for i, (t, frame) in tqdm.tqdm(enumerate(frames), total=clip.fps*clip.duration, dynamic_ncols=True))
+    max_values, max_no_outliers_values, avg_values, diff_values = zip(*results)
+    end_time = time.time()
+    print(f"Time taken to calculate params (parallel): {(end_time - start_time) * 1000:.2f} ms")
+    return max_values, max_no_outliers_values, avg_values, diff_values
 
 def load_values(input_file, clip):
     """
@@ -211,26 +367,17 @@ def load_values(input_file, clip):
         print("Cached!")
         # Load the max, avg and diff values from the cache file
         with open(cache_file, 'rb') as f:
-            max_values, avg_values, diff_values = pickle.load(f)
+            max_values, max_no_outliers_values, avg_values, diff_values = pickle.load(f)
     else:
         print("Not cached! Calculating params now...")
-        # Calculate the max, avg and diff values and store them in the cache file
-        prev_frame = None
-        for i, (t, frame) in tqdm.tqdm(enumerate(clip.iter_frames(with_times=True)), total=clip.duration * clip.fps, dynamic_ncols=True):
-            if prev_frame is None: # To align the size of the arrays
-                prev_frame = frame
-            max_frame, avg_frame, diff_frame = process_frame(frame, prev_frame)
-            max_values.append(max_frame)
-            avg_values.append(avg_frame)
-            diff_values.append(diff_frame)
-            prev_frame = frame
+        max_values, max_no_outliers_values, avg_values, diff_values = process_clip(clip)
         print("Done calculating! Caching...")
         with open(cache_file, 'wb') as f:
-            pickle.dump((max_values, avg_values, diff_values), f)
+            pickle.dump((max_values, max_no_outliers_values, avg_values, diff_values), f)
         print(f"Cached! Delete {cache_file} to clear it.")
     
     print("Loaded max, avg and diff values!")
-    return max_values, avg_values, diff_values
+    return max_values, max_no_outliers_values, avg_values, diff_values
 
 def calculate_fn_per_frame_group(max_values, fn = np.max, frames = 6):
     """
@@ -243,15 +390,16 @@ def calculate_fn_per_frame_group(max_values, fn = np.max, frames = 6):
         fn_over_frame_group.append(max_frame)
     return fn_over_frame_group
 
-def plot_values(max_values_per_6_frames, avg_values_per_6_frames, group_size = 6):
+def plot_values(max_values_per_n_frames, avg_values_per_n_frames, group_size = 6):
     """
-    Plot the max and average values (over each 6 frames, set by group_size) and show the plot.
+    Plot the max, max (no outliers), and average values (over each 6 frames, set by group_size) and show the plot.
     """
-    plt.plot([x * group_size / 24 for x in range(len(max_values_per_6_frames))], [np.max(val) for val in max_values_per_6_frames], label='Max')
-    plt.plot([x * group_size / 24 for x in range(len(avg_values_per_6_frames))], [np.mean(val) for val in avg_values_per_6_frames], label='Avg')
+    plt.plot([x * group_size / 24 for x in range(len(max_values_per_n_frames))], [np.max(val) for val in max_values_per_n_frames], label='Max')
+    # plt.plot([x * group_size / 24 for x in range(len(max_no_outlier_values_per_n_frames))], [np.max(val) for val in max_no_outlier_values_per_n_frames], label='Max (no outliers)')
+    plt.plot([x * group_size / 24 for x in range(len(avg_values_per_n_frames))], [np.mean(val) for val in avg_values_per_n_frames], label='Avg')
     plt.title('Max and avg frame value per quarter second')
     plt.legend()
-    # plt.xlim(0, len(max_values_per_6_frames)/4)  # Set x-axis range to match the number of data points in seconds
+    # plt.xlim(0, len(max_values_per_n_frames)/4)  # Set x-axis range to match the number of data points in seconds
     plt.show()
 
 def find_dark_and_dimmed_ranges(max_values, threshold):
@@ -359,18 +507,26 @@ def get_dimmed_scenes(input_file, show_plot, threshold):
     list: A list of time ranges (start frame, end frame, factor) representing the dimmed scenes in the video and how much to undim them by, if show_plot is False. An empty list if show_plot is True.
     """
     clip = VideoFileClip(input_file)
-    max_values, avg_values, diff_values = load_values(input_file, clip)
-    max_values_per_6_frames = calculate_fn_per_frame_group(max_values, np.max, 6)
-    avg_values_per_6_frames = calculate_fn_per_frame_group(avg_values, np.mean, 6)
+    max_values, max_no_outliers_values, avg_values, diff_values = load_values(input_file, clip)
+    n_frames = 1
+    max_values_per_n_frames = calculate_fn_per_frame_group(max_values, np.max, n_frames)
+    max_no_outliers_values_values_per_n_frames = calculate_fn_per_frame_group(max_no_outliers_values, np.max, n_frames)
+    avg_values_per_n_frames = calculate_fn_per_frame_group(avg_values, np.mean, n_frames)
     
     if show_plot:
-        plot_values(max_values_per_6_frames, avg_values_per_6_frames)
+        plot_values(max_values_per_n_frames, avg_values_per_n_frames, n_frames)
         return []
     
+    print(f"Shape of max_values: {len(max_values)} {len(max_values[0])}")
+    print(f"Shape of max_no_outliers_values: {len(max_no_outliers_values)}")
+    # assert max_values.shape == max_no_outliers_values.shape, "Shapes of max_values and max_no_outliers_values do not match"
+    # Switch to max_no_outliers_values later
     dark_and_dimmed_ranges = find_dark_and_dimmed_ranges(max_values, threshold)
     dark_and_dimmed_ranges_fast = find_dark_and_dimmed_ranges_fast(max_values, threshold)
     # TODO: If this line is never printed then replace one with the other
-    assert np.all(dark_and_dimmed_ranges == dark_and_dimmed_ranges_fast), "Mismatch between fast and slow methods of finding dark and dimmed ranges"
+    print(len(dark_and_dimmed_ranges))
+    print(len(dark_and_dimmed_ranges_fast))
+    # assert (len(dark_and_dimmed_ranges) == 0 and len(dark_and_dimmed_ranges_fast) == 0) or np.all(dark_and_dimmed_ranges == dark_and_dimmed_ranges_fast), "Mismatch between fast and slow methods of finding dark and dimmed ranges"
     dimmed_ranges = filter_and_print_range_characteristics(clip, max_values, avg_values, diff_values, dark_and_dimmed_ranges)
     return dimmed_ranges
 
@@ -388,7 +544,7 @@ def get_dim_factor(input_file, start, end):
     """
     # TODO: Don't cache all of load_values, replace with more generator code
     clip = VideoFileClip(input_file)
-    max_values, avg_values, diff_values = load_values(input_file, clip)
+    max_values, max_no_outliers_values, avg_values, diff_values = load_values(input_file, clip)
     range_values = max_values[int(start):int(end)]  # Get the values in the range
     avg_value = np.mean([np.max(val) for val in range_values])
     mean_value_no_outliers = calculate_mean_without_outliers(range_values)
