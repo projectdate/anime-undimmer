@@ -7,6 +7,7 @@ This python script exactly removes the dim filters for a segment of an anime cli
 I use Python 3.11.4 with pip 23.1.2. It will probably run on any Python3.
 ```bash
 pip install -r requirements.txt
+python3 -m modal setup
 ```
 
 ## Usage
@@ -62,7 +63,6 @@ There are a couple key insights here:
 - **Speed via caching and generators**: To make it faster, we cache the calculated max values to be able to restart a closed process faster (in the .pkl). We also store generators instead of arrays for the expensive step of calculating mean and variance of each dimmed/dark scenes to figure out if they are epileptic, for it to be as efficient a computation as possible. It's still slow though, since it's Python.
 
 ## To-do
-- Copy over any included subtitle file as well (high priority, as it makes anime unwatchable)
 - If there's two consecutive dimmed ranges for some scene (say, less than 2 seconds apart), also test the middle range for epilepsy and dimming (high priority, as incorrectly converted dark scenes end up with flashes in the middle so this is a band-aid)
 - Rerun the regression with flashes and epileptic parameters on the ground truth to get the results (medium priority, as this will likely fully solve the dark vs dim problem. normally would be high but rn it's sorta mostly solved tho)
 - If there's a massive dimmed range, it's possible that some subset of that is really epileptic and some subset is not. Use flashes to only undim scenes at least 15 frames long, with at least two flashes maybe? (medium priority, it seems higher priority is fix the above?)

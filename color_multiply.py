@@ -1,6 +1,9 @@
 import argparse
+import itertools
 import math
 import random
+import shutil
+import subprocess
 from moviepy.editor import VideoFileClip
 import numpy as np
 import matplotlib.pyplot as plt
@@ -13,6 +16,12 @@ from joblib import Parallel, delayed
 import concurrent.futures
 import tqdm
 import psutil
+import modal
+
+stub = modal.Stub(
+    "parallel_clip",
+    image=modal.Image.debian_slim().pip_install("argparse", "moviepy", "numpy", "matplotlib", "tqdm", "joblib", "psutil", "duckdb"),
+)
 
 def multiply_colors(frame, dimmed_scenes, current_frame):
     """
@@ -226,6 +235,7 @@ def calculate_max_without_outliers_single_frame(frame):
     max_no_outliers_frame = np.max(threshold_frames, axis=(0, 1))  # Max across height and width, but keep the RGB channels separate
     return max_no_outliers_frame
 
+@stub.function(cpu=14)
 def process_frame(frame, prev_frame):
     """
     Process a frame and calculate the maximum, average and difference values. Time and print it.
@@ -262,9 +272,25 @@ def process_frame(frame, prev_frame):
     diff_value = np.mean(np.abs(diff_frame))
     end_time_diff_value = time.time()
     
-    print(f"Time taken for max_frame: {end_time_max_frame - start_time_max_frame} seconds, avg_frame: {end_time_avg_frame - start_time_avg_frame} seconds, max_no_outliers_frame: {end_time_max_no_outliers_frame - start_time_max_no_outliers_frame} seconds, diff_frame: {end_time_diff_frame - start_time_diff_frame} seconds, diff_value: {end_time_diff_value - start_time_diff_value} seconds")
+    # Time taken for max_frame: 0.009861946105957031 seconds, avg_frame: 0.009123086929321289 seconds, max_no_outliers_frame: 0.026125669479370117 seconds, diff_frame: 0.00890803337097168 seconds,  diff_value: 0.003439188003540039 seconds
+    # Time taken for max_frame: 0.008923053741455078 seconds, avg_frame: 0.010212898254394531 seconds, max_no_outliers_frame: 0.026179075241088867 seconds, diff_frame: 0.009123086929321289 seconds, diff_value: 0.004380941390991211 seconds
+    # Time taken for max_frame: 0.00949406623840332 seconds,  avg_frame: 0.00931096076965332 seconds,  max_no_outliers_frame: 0.025065898895263672 seconds, diff_frame: 0.009306192398071289 seconds, diff_value: 0.0051729679107666016 seconds
+    # Time taken for max_frame: 0.008934974670410156 seconds, avg_frame: 0.009266853332519531 seconds, max_no_outliers_frame: 0.01978325843811035 seconds,  diff_frame: 0.011101961135864258 seconds, diff_value: 0.004160881042480469 seconds
+    # Time taken for max_frame: 0.008736133575439453 seconds, avg_frame: 0.009737014770507812 seconds, max_no_outliers_frame: 0.020854949951171875 seconds, diff_frame: 0.015026092529296875 seconds, diff_value: 0.004965066909790039 seconds
+    # Time taken for max_frame: 0.008708000183105469 seconds, avg_frame: 0.008868932723999023 seconds, max_no_outliers_frame: 0.022265911102294922 seconds, diff_frame: 0.009536981582641602 seconds, diff_value: 0.003737926483154297 seconds
+    # print(f"Time taken for max_frame: {end_time_max_frame - start_time_max_frame} seconds, avg_frame: {end_time_avg_frame - start_time_avg_frame} seconds, max_no_outliers_frame: {end_time_max_no_outliers_frame - start_time_max_no_outliers_frame} seconds, diff_frame: {end_time_diff_frame - start_time_diff_frame} seconds, diff_value: {end_time_diff_value - start_time_diff_value} seconds")
     
     return max_frame, max_no_outliers_frame, avg_frame, diff_value
+
+@stub.function(cpu=14)
+def process_frames_sequentially(frames_with_info, prev_frame):
+    results = []
+    for i_frame in frames_with_info:
+        i, (t, frame) = i_frame
+        result = process_frame(frame, prev_frame)
+        results.append(result)
+        prev_frame = frame  # Update prev_frame for the next iteration
+    return results
 
 def process_frame_parallel(frame, prev_frame):
     """
@@ -318,15 +344,8 @@ def process_clip(clip):
     print(f"Time taken to calculate params (slow): {(end_time - start_time) * 1000:.2f} ms")
     return max_values, max_no_outliers_values, avg_values, diff_values
 
-import modal
-
-stub = modal.Stub(
-    "parallel_clip",
-    image=modal.Image.debian_slim().pip_install("argparse", "moviepy", "numpy", "matplotlib", "tqdm" "joblib" "psutil", "duckdb"),
-)
-
-@stub.function()
-def process_clip_parallel(clip):
+@stub.function(cpu=14)
+def process_clip_parallel_modal_old(clip):
     """
     Process a clip in parallel and calculate the maximum, average and difference values for each frame.
     This is a parallel version of process_clip, but it OOMs on large clips.
@@ -342,12 +361,86 @@ def process_clip_parallel(clip):
     start_time = time.time()
     frames = list(clip.iter_frames(with_times=True))
     cores = psutil.cpu_count(logical=False)
-    # print(f"Using max memory on {cores/2} cores...")
-    results = Parallel(n_jobs=16)(delayed(process_frame)(frame, frames[i-1][1] if i > 0 else frame) 
+    print(f"Using max memory on {20} cores, {cores} available...")
+    results = Parallel(20)(delayed(process_frame)(frame, frames[i-1][1] if i > 0 else frame) 
                                 for i, (t, frame) in tqdm.tqdm(enumerate(frames), total=clip.fps*clip.duration, dynamic_ncols=True))
     max_values, max_no_outliers_values, avg_values, diff_values = zip(*results)
     end_time = time.time()
     print(f"Time taken to calculate params (parallel): {(end_time - start_time) * 1000:.2f} ms")
+    return max_values, max_no_outliers_values, avg_values, diff_values
+
+@stub.local_entrypoint()
+def process_clip_parallel_modal_new(clip):
+    """
+    Process a clip in parallel and calculate the maximum, average and difference values for each frame.
+    This is a parallel version of process_clip, but it OOMs on large clips.
+    
+    Parameters:
+    clip (VideoFileClip): The video clip to be processed. It's an object of class VideoFileClip.
+
+    Returns:
+    tuple: A tuple containing lists of maximum (1D array of RGB values), maximum without outliers (1D array of RGB values), average (1D array of RGB values) and difference values (1D array of single float values) for each frame in the clip.
+    """
+    # # Calculate the max, avg and diff values and store them in the cache file in parallel
+    # I think this can work up to some number of frames or something? Or else it OOMs   
+    start_time = time.time()
+    frames = list(clip.iter_frames(with_times=True))
+    cores = psutil.cpu_count(logical=False)
+    batch_size = 20
+    print(f"Using max memory on {batch_size} cores, {cores} available...")
+    results = Parallel(batch_size)(delayed(process_frame)(frame, frames[i-1][1] if i > 0 else frame) 
+                                for i, (t, frame) in tqdm.tqdm(enumerate(frames), total=clip.fps*clip.duration, dynamic_ncols=True))
+    max_values, max_no_outliers_values, avg_values, diff_values = zip(*results)
+    end_time = time.time()
+    print(f"Time taken to calculate params (parallel): {(end_time - start_time) * 1000:.2f} ms")
+    return max_values, max_no_outliers_values, avg_values, diff_values
+
+# joblib.externals.loky.process_executor.BrokenProcessPool: A task has failed to un-serialize. Please ensure that the arguments of the function are all picklable.
+def process_clip_parallel(clip):
+    """
+    Process a clip in parallel and calculate the maximum, average and difference values for each frame.
+    
+    Parameters:
+    clip (VideoFileClip): The video clip to be processed. It's an object of class VideoFileClip.
+
+    Returns:
+    tuple: A tuple containing lists of maximum (1D array of RGB values), maximum without outliers (1D array of RGB values), average (1D array of RGB values) and difference values (1D array of single float values) for each frame in the clip.
+    """
+    cores = psutil.cpu_count(logical=False)
+    batch_size = 8
+    print(f"Using {batch_size} batch size, {cores} cores available...")
+
+    # Create a Parallel object with 8 jobs
+    with Parallel(n_jobs=batch_size) as parallel:
+        results = []
+        frame_generator = clip.iter_frames(with_times=True)
+        prev_frame = None
+        # Get the total number of frames for the progress bar
+        total_frames = int(clip.fps * clip.duration)
+
+        # Create a progress bar
+        pbar = tqdm.tqdm(total=total_frames, desc="Processing frames")
+
+        while True:
+            # Create a batch of jobs
+            batch = list(itertools.islice(frame_generator, batch_size))
+            if not batch:
+                break
+            # Process the batch of jobs in parallel
+            batch_jobs = [(frame, prev_frame if i > 0 else frame) for i, (t, frame) in enumerate(batch)]
+            # Compare the outputs of process_frame_parallel and process_frame on one frame
+            batch_results = Parallel(n_jobs=batch_size)(delayed(process_frame_parallel)(*job) for job in batch_jobs)
+
+            # Append the results to the results list
+            results.extend(batch_results)
+            # Update the previous frame
+            prev_frame = batch[-1][1]
+            # Update the progress bar
+            pbar.update(len(batch))
+
+    # Close the progress bar
+    pbar.close()
+    max_values, max_no_outliers_values, avg_values, diff_values = zip(*results)
     return max_values, max_no_outliers_values, avg_values, diff_values
 
 def load_values(input_file, clip):
@@ -367,10 +460,16 @@ def load_values(input_file, clip):
         print("Cached!")
         # Load the max, avg and diff values from the cache file
         with open(cache_file, 'rb') as f:
-            max_values, max_no_outliers_values, avg_values, diff_values = pickle.load(f)
+            processed_values = pickle.load(f)
+            if len(processed_values) == 3:
+                max_values, avg_values, diff_values = processed_values
+                max_no_outliers_values = max_values
+            else:
+                max_values, max_no_outliers_values, avg_values, diff_values = processed_values
+            # max_values, max_no_outliers_values, avg_values, diff_values = pickle.load(f)  
     else:
         print("Not cached! Calculating params now...")
-        max_values, max_no_outliers_values, avg_values, diff_values = process_clip(clip)
+        max_values, max_no_outliers_values, avg_values, diff_values = process_clip_parallel(clip)
         print("Done calculating! Caching...")
         with open(cache_file, 'wb') as f:
             pickle.dump((max_values, max_no_outliers_values, avg_values, diff_values), f)
@@ -390,14 +489,14 @@ def calculate_fn_per_frame_group(max_values, fn = np.max, frames = 6):
         fn_over_frame_group.append(max_frame)
     return fn_over_frame_group
 
-def plot_values(max_values_per_n_frames, avg_values_per_n_frames, group_size = 6):
+def plot_values(max_values_per_n_frames, avg_values_per_n_frames, max_no_outliers_values_per_n_frames, group_size = 6):
     """
     Plot the max, max (no outliers), and average values (over each 6 frames, set by group_size) and show the plot.
     """
     plt.plot([x * group_size / 24 for x in range(len(max_values_per_n_frames))], [np.max(val) for val in max_values_per_n_frames], label='Max')
-    # plt.plot([x * group_size / 24 for x in range(len(max_no_outlier_values_per_n_frames))], [np.max(val) for val in max_no_outlier_values_per_n_frames], label='Max (no outliers)')
+    plt.plot([x * group_size / 24 for x in range(len(max_no_outliers_values_per_n_frames))], [np.max(val) for val in max_no_outliers_values_per_n_frames], label='Max (no outliers)')
     plt.plot([x * group_size / 24 for x in range(len(avg_values_per_n_frames))], [np.mean(val) for val in avg_values_per_n_frames], label='Avg')
-    plt.title('Max and avg frame value per quarter second')
+    plt.title('Max, max no outliers, and avg frame value per quarter second')
     plt.legend()
     # plt.xlim(0, len(max_values_per_n_frames)/4)  # Set x-axis range to match the number of data points in seconds
     plt.show()
@@ -514,11 +613,10 @@ def get_dimmed_scenes(input_file, show_plot, threshold):
     avg_values_per_n_frames = calculate_fn_per_frame_group(avg_values, np.mean, n_frames)
     
     if show_plot:
-        plot_values(max_values_per_n_frames, avg_values_per_n_frames, n_frames)
+        plot_values(max_values_per_n_frames, avg_values_per_n_frames, max_no_outliers_values_values_per_n_frames, n_frames)
         return []
     
     print(f"Shape of max_values: {len(max_values)} {len(max_values[0])}")
-    print(f"Shape of max_no_outliers_values: {len(max_no_outliers_values)}")
     # assert max_values.shape == max_no_outliers_values.shape, "Shapes of max_values and max_no_outliers_values do not match"
     # Switch to max_no_outliers_values later
     dark_and_dimmed_ranges = find_dark_and_dimmed_ranges(max_values, threshold)
@@ -602,10 +700,12 @@ def frame_to_time(frame_num):
     seconds = (frame_num / 24) % 60
     return f"{minutes:02d}:{seconds:.2f}"
 
+# @stub.local_entrypoint()
 def main():
     parser = argparse.ArgumentParser(description='Multiply color values in a video by a factor.')
     parser.add_argument('input_file', type=str, help='Path to the input video file')
     parser.add_argument('--out', type=str, nargs='?', default=None, help='Path to the output video file')
+    parser.add_argument('--modal', action='store_true', help='Pass if should run the expensive parallel processing on modal in the cloud for speed')
     parser.add_argument('--only_plot', action='store_true', help='Only plot max frame value for each quarter second')
     parser.add_argument('--custom_scene', nargs=3, metavar=('start', 'end', 'factor (0 to auto-calculate)'), help='Define a custom dimmed scene with start time, end time (in minutes:seconds or seconds), and optional dim factor (if 0, we will auto-calculate)')
 
@@ -624,7 +724,88 @@ def main():
           
     if args.output_file and os.path.splitext(args.output_file)[1] != '.mkv':
         raise ValueError("Output file must have .mkv extension.")
+        
+    if(args.modal):
+        with stub.run():
+            process_input(args)
+    else:
+        process_input(args)
+    
+def plot_dimmed_scenes(dimmed_scenes_timestamps, filename):
+    """
+    Plot the dimmed scenes as a bar graph to visualize which scenes were dimmed the most.
+    
+    Parameters:
+    dimmed_scenes_timestamps (list of tuples): List containing tuples of (start time, stop time, dim factor)
+    """
+    import matplotlib.pyplot as plt
+    # Extract start and end times for plotting
+    start_times = [start for start, _, _ in dimmed_scenes_timestamps]
+    end_times = [end for _, end, _ in dimmed_scenes_timestamps]
+    dim_factors = [float(factor) for _, _, factor in dimmed_scenes_timestamps]
 
+    # Convert start and end times to seconds for calculation
+    start_times_seconds = [int(min_sec.split(':')[0]) * 60 + float(min_sec.split(':')[1]) for min_sec in start_times]
+    end_times_seconds = [int(min_sec.split(':')[0]) * 60 + float(min_sec.split(':')[1]) for min_sec in end_times]
+
+    # Calculate the duration of each dimmed scene for plotting
+    durations = [end - start for start, end in zip(start_times_seconds, end_times_seconds)]
+    
+    plt.figure(figsize=(10, 6))
+    # Plot each dimmed scene as a bar with its height representing the dim factor
+    for start, duration, factor in zip(start_times_seconds, durations, dim_factors):
+        plt.bar(x=start, height=factor, width=duration, align='edge', alpha=0.7)
+    
+    # Increase the frequency of x-axis labels by a factor of 3
+    original_ticks = plt.xticks()[0]
+    new_ticks = np.arange(min(original_ticks), max(original_ticks) + 1, (max(original_ticks) - min(original_ticks)) / (len(original_ticks) * 3 - 1))
+    new_labels = [f"{int(s//60)}:{int(s%60):02d}" for s in new_ticks]
+    plt.xticks(ticks=new_ticks, labels=new_labels, rotation=45, ha="right")
+    plt.xlabel('Time (minutes:seconds)')
+    plt.ylabel('Dim Factor')
+    plt.title('Dimmed Scenes Visualization')
+    plt.savefig(filename)
+    plt.close()
+
+def copy_subtitles(input_video_file, output_video_file):
+    """
+    Adds subtitle tracks from an input MKV file to another MKV video file without altering the original video and audio tracks.
+    This function creates a new output file that combines the original video and audio streams with the subtitle streams from the input subtitle file.
+    
+    Parameters:
+    input_video_file (str): Path to the original video file whose video and audio streams will remain unchanged.
+    subtitle_file (str): Path to the MKV file from which subtitles will be copied.
+    output_file (str): Path to the new output file that will contain the combined streams.
+    """
+    subtitle_file = output_video_file.rsplit('.', 1)[0] + '_subtitled.' + output_video_file.rsplit('.', 1)[1]
+    try:
+        # Command to combine original video/audio with the subtitles into a new file
+        command = [
+            'ffmpeg',
+            '-y',
+            '-i', output_video_file,  # Original video file
+            '-i', input_video_file,  # Subtitle file
+            '-map', '0:v',  # Map video stream from the first input file
+            '-map', '0:a',  # Map audio streams from the first input file
+            '-map', '1:s',  # Map subtitle streams from the second input file
+            '-c', 'copy',  # Copy all selected streams without re-encoding
+            '-c:s', 'copy',  # Ensure subtitles are copied without re-encoding
+            subtitle_file  # New output file
+        ]
+        
+        # Execute the command
+        subprocess.run(command, check=True)
+        
+        # Overwrite the original output video file with the new file containing subtitles
+        # This is because ffmpeg doesn't allow overwriting the input files
+        shutil.move(subtitle_file, output_video_file)
+        print("Subtitles added successfully, video and audio preserved.")
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to add subtitles: {e}")
+
+# This is an optional Modal decorator
+@stub.local_entrypoint()
+def process_input(args):
     if(args.only_plot):
         get_dimmed_scenes(args.input_file, args.only_plot, 0)
     else:
@@ -635,12 +816,16 @@ def main():
             dimmed_scenes = [(start, end, factor)]
         else:
             dimmed_scenes = get_all_dimmed_scenes(args.input_file, args.only_plot)
-            
+        
         # Convert frame numbers to timestamps just for printing
         dimmed_scenes_timestamps = [(frame_to_time(start), frame_to_time(end), "{:.2f}".format(factor)) for start, end, factor in dimmed_scenes]
         print("Dimmed scenes (start time, stop time, dim factor): ", dimmed_scenes_timestamps)
         
-        process_video(args.input_file, args.output_file, dimmed_scenes)
-
+        # Plot the dimmed scenes
+        plot_filename = args.output_file.replace('.mkv', '_dimmed_scenes_plot.png')
+        plot_dimmed_scenes(dimmed_scenes_timestamps, plot_filename)
+        # process_video(args.input_file, args.output_file, dimmed_scenes)
+        copy_subtitles(args.input_file, args.output_file)
+            
 if __name__ == "__main__":
     main()
