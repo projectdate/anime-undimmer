@@ -824,7 +824,7 @@ def process_input(args):
         # Plot the dimmed scenes
         plot_filename = args.output_file.replace('.mkv', '_dimmed_scenes_plot.png')
         plot_dimmed_scenes(dimmed_scenes_timestamps, plot_filename)
-        # process_video(args.input_file, args.output_file, dimmed_scenes)
+        process_video(args.input_file, args.output_file, dimmed_scenes)
         copy_subtitles(args.input_file, args.output_file)
             
 if __name__ == "__main__":
